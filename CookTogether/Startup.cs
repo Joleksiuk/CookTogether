@@ -1,4 +1,5 @@
 using CookTogether.Areas.Identity;
+using CookTogether.Models.Api;
 using CookTogether.Data;
 using DataAccessLibrary;
 using Microsoft.AspNetCore.Builder;
@@ -17,6 +18,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CookTogether.Data.MyData;
+using CookTogether.Models;
 
 namespace CookTogether
 {
@@ -47,6 +49,10 @@ namespace CookTogether
             //DATABASE CONNECTION
             services.AddTransient<ISqlDataAccess, SqlDataAccess>();
             services.AddTransient<IUserData, UserData>();
+
+            //API CLIENT
+            services.AddSingleton<MealApiService>();
+            services.AddHttpClient();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
