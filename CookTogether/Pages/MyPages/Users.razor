@@ -1,0 +1,77 @@
+﻿@page "/users"
+
+@using DataAccessLibrary
+@using DataAccessLibrary.Models
+@using CookTogether.Models
+
+@inject IUserData _db
+
+<h3>Users</h3>
+
+<h4>Insert New User</h4>
+<EditForm Model="@newUser" OnValidSubmit="@InsertUser">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <InputText id="id"@bind-Value="newUser.id" />
+    <InputText id="username" @bind-Value="newUser.username" />
+    <InputText id="password_hash" @bind-Value="newUser.password_hash" />
+
+    <button type="submit" class="btn btn-primary">Submit</button>
+
+</EditForm>
+
+<h4>Current Users</h4>
+@if(users is null)
+{
+    <p><em>Loading data...</em></p>
+}
+else
+{
+    <table class="table table-striped">
+        <thread>
+            <tr>
+                <th>id</th>
+                <th>username</th>
+                <th>password_hash</th>
+            </tr>
+        </thread>
+        <tbody>
+            @foreach(var user in users)
+                {
+            <tr>
+                <td>@user.id</td>
+                <td>@user.username</td>
+                <td>@user.password_hash</td>
+            </tr>
+                }
+        </tbody>
+    </table>
+}
+
+
+@code {
+    
+    private List<UserModel> users;
+    private DisplayUserModel newUser = new DisplayUserModel();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        users = await _db.GetUsers();
+    }
+
+    private async Task InsertUser()
+    {
+        UserModel userModel = new UserModel
+        {
+            id = Int32.Parse(newUser.id),
+            username = newUser.username,
+            password_hash = newUser.password_hash
+        };
+
+    await _db.InsertUser(userModel);
+    users.Add(userModel);
+    newUser = new DisplayUserModel();
+}
+}
