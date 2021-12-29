@@ -1,6 +1,6 @@
 using System;
 
-namespace CookTogether.Data
+namespace CookTogether.Models
 {
     public class WeatherForecast
     {

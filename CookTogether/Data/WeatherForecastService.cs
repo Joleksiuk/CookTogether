@@ -2,7 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 
-namespace CookTogether.Data
+namespace CookTogether.Models
 {
     public class WeatherForecastService
     {

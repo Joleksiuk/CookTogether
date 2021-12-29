@@ -1,13 +1,13 @@
 ﻿@page "/fetchdata"
 
-@using CookTogether.Data
-@inject WeatherForecastService ForecastService
+@using CookTogether.Models.Api
+@inject MealApiService MealApiService
 
 <h1>Weather forecast</h1>
 
 <p>This component demonstrates fetching data from a service.</p>
 
-@if (forecasts == null)
+@if (areas == null || categories == null || ingredients == null || meals == null)
 {
     <p><em>Loading...</em></p>
 }
@@ -23,13 +23,45 @@ else
             </tr>
         </thead>
         <tbody>
-            @foreach (var forecast in forecasts)
+
+            @foreach (var area in areas)
             {
                 <tr>
-                    <td>@forecast.Date.ToShortDateString()</td>
-                    <td>@forecast.TemperatureC</td>
-                    <td>@forecast.TemperatureF</td>
-                    <td>@forecast.Summary</td>
+                    <td>@area.Name</td>
+                </tr>
+            }
+            @foreach(var category in categories)
+            {
+                <tr>
+                    <td>@category.Id</td>
+                    <td>@category.Name</td>
+                    <td>@category.ThumbnailUrl.ToString()</td>
+
+                </tr>
+            }
+            @foreach(var ingredient in ingredients)
+            {
+                <tr>
+                    <td>
+                        @ingredient.Id
+                    </td>
+                    <td>
+                        @ingredient.Name
+                    </td>
+                    <td>
+                        <img src="@ingredient.ThumbnailUrl.ToString()"/>
+                    </td>
+                </tr>
+            }
+            @foreach(var meal in meals)
+            {
+                <tr>
+                    <td>@meal.Id</td>
+                    <td>@meal.Name</td>
+                    <td>@meal.CategoryName</td>
+                    <td>
+                        <img src="@meal.ThumbnailUrl.ToString()" />
+                    </td>
                 </tr>
             }
         </tbody>
@@ -37,10 +69,16 @@ else
 }
 
 @code {
-    private WeatherForecast[] forecasts;
+    private Category[] categories;
+    private Area[] areas;
+    private Ingredient[] ingredients;
+    private Meal[] meals;
 
     protected override async Task OnInitializedAsync()
     {
-        forecasts = await ForecastService.GetForecastAsync(DateTime.Now);
+        areas = await MealApiService.getAreas();
+        categories = await MealApiService.getCategories();
+        ingredients = await MealApiService.getIngredients();
+        meals = await MealApiService.getMealsStartingWith("a");
     }
 }
