@@ -18,7 +18,7 @@ namespace DataAccessLibrary
 
         public Task<List<UserModel>> GetUsers()
         {
-            string sql = "select * from [dbo].[User]";
+            string sql = @"select * from [dbo].[User]";
             return _db.LoadData<UserModel, dynamic>(sql, new { });
         }
 
