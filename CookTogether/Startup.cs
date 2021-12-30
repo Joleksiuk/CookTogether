@@ -37,7 +37,7 @@ namespace CookTogether
         {
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(
-                   Configuration.GetConnectionString("Authentication")));
+                   Configuration.GetConnectionString("Default")));
             services.AddDefaultIdentity<IdentityUser>(options => options.SignIn.RequireConfirmedAccount = true)
                  .AddEntityFrameworkStores<ApplicationDbContext>();
             services.AddRazorPages();
