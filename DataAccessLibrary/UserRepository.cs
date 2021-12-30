@@ -18,14 +18,14 @@ namespace DataAccessLibrary
 
         public Task<List<UserModel>> GetUsers()
         {
-            string sql = @"select * from [dbo].[User]";
+            string sql = @"select * from [dbo].[AspNetUsers]";
             return _db.LoadData<UserModel, dynamic>(sql, new { });
         }
 
         public Task InsertUser(UserModel user)
         {
-            string sql = @"insert into [dbo].[User] (id, username, password_hash)
-                            VALUES (@id, @username, @password_hash)";
+            string sql = @"insert into [dbo].[AspNetUsers] (Id, Username, PasswordHash)
+                            VALUES (@Id, @UserName, @PasswordHash)";
             return _db.SaveData(sql, user);
         }
     }

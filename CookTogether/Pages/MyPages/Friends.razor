@@ -1,0 +1,68 @@
+﻿@page "/friends"
+
+@using DataAccessLibrary
+@using DataAccessLibrary.Models
+@using CookTogether.Models
+
+@inject IUserData UserRepository
+
+<h3>Friends</h3>
+
+<h4>Current Users</h4>
+
+<p>Current count: @currentCount</p>
+
+@if (astate != null)
+{
+    <p>
+        Name:@astate.User.Identity.Name
+    </p>
+}
+
+@if (users is null)
+{
+    <p><em>Loading data...</em></p>
+}
+else
+{
+    <table class="table table-striped">
+        <thread>
+            <tr>
+                <th>username</th>
+            </tr>
+        </thread>
+        <tbody>
+            @foreach (var user in users)
+            {
+                <tr>
+                    <td>@user.username</td>
+                    <td> <button @onclick="()=> addFriend(user)">Add friend</button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+@code {
+
+    private string currentCount = "";
+    private List<UserModel> users;
+    private DisplayUserModel newUser = new DisplayUserModel();
+
+    [CascadingParameter]
+    private Task<AuthenticationState> AuthenticationState { get; set; }
+    private AuthenticationState astate;
+
+    protected override async Task OnInitializedAsync()
+    {
+        users = await UserRepository.GetUsers();
+         var userState = await AuthenticationState;
+
+    }
+
+    private void addFriend(UserModel user)
+    {
+        currentCount = user.username;
+    }
+}
