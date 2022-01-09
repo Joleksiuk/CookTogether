@@ -4,7 +4,7 @@
 @using DataAccessLibrary.Models
 @using CookTogether.Models
 
-@inject IUserData _db
+@inject IUserRepository _db
 
 <h3>Users</h3>
 
@@ -73,5 +73,5 @@ else
     await _db.InsertUser(userModel);
     users.Add(userModel);
     newUser = new DisplayUserModel();
-}
+    }
 }

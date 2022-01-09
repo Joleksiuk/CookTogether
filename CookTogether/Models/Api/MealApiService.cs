@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Extensions.Logging;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net.Http;
@@ -30,7 +31,7 @@ namespace CookTogether.Models.Api
             this.httpClient = httpClient;
         }
 
-        public async Task<Category[]> getCategories()
+        public async Task<Category[]> GetCategories()
         {
             Category[] categories = Array.Empty<Category>();
 
@@ -42,12 +43,12 @@ namespace CookTogether.Models.Api
                     categories = response.Categories;
                 }
             }
-            catch { }
+            catch(HttpRequestException e) { }
             
             return categories; 
         }
 
-        public async Task<string> getCategoriesListAsString()
+        public async Task<string> GetCategoriesListAsString()
         {
             string response;
             try
@@ -61,7 +62,7 @@ namespace CookTogether.Models.Api
             return response;
         }
 
-        public async Task<Area[]> getAreas()
+        public async Task<Area[]> GetAreas()
         {
             Area[] areas = Array.Empty<Area>();
             try
@@ -76,7 +77,7 @@ namespace CookTogether.Models.Api
             return areas;
         }
 
-        public async Task<Ingredient[]> getIngredients()
+        public async Task<Ingredient[]> GetIngredients()
         {
             Ingredient[] ingredients = Array.Empty<Ingredient>();
             try
@@ -95,7 +96,7 @@ namespace CookTogether.Models.Api
             return ingredients;
         }
 
-        public async Task<Meal[]> getMealsStartingWith(string starting)
+        public async Task<Meal[]> GetMealsStartingWith(string starting)
         {
             Meal[] meals = Array.Empty<Meal>();
             string mealsUrl = String.Format(MEALS_BY_STARTS_WITH_URL_FORMAT, starting);

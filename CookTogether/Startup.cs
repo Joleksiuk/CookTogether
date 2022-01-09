@@ -19,6 +19,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using CookTogether.Data.MyData;
 using CookTogether.Models;
+using Microsoft.Extensions.Logging;
 
 namespace CookTogether
 {
@@ -48,11 +49,22 @@ namespace CookTogether
 
             //DATABASE CONNECTION
             services.AddTransient<ISqlDataAccess, SqlDataAccess>();
-            services.AddTransient<IUserData, UserData>();
+            services.AddTransient<IUserRepository, UserRepository>();
 
             //API CLIENT
             services.AddSingleton<MealApiService>();
             services.AddHttpClient();
+
+            //REPOSITORIES
+            services.AddTransient<IAreaRepository, AreaRepository>();
+            services.AddTransient<ICategoryRepository, CategoryRepository>();
+            services.AddTransient<IIngredientRepository, IngredientRepository>();
+            services.AddTransient<IMealRepository, MealRepository>();
+
+            services.AddSingleton<Repositories>();
+
+            //INIT SERVICE
+            services.AddSingleton<DatabaseInitService>();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
