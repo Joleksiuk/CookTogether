@@ -24,9 +24,17 @@
         </li>
         <li class="nav-item px-3">
             <NavLink class="nav-link" href="users">
-                <span class="oi oi-plus" aria-hidden="true"></span> Users
+                <span class="oi oi-plus" aria-hidden="true"></span> USERS
             </NavLink>
         </li>
+        @if(user.Identity.IsAuthenticated)
+        {
+            <li class="nav-item px-3">
+                <NavLink class="nav-link" href="friends">
+                    <span class="oi oi-people" aria-hidden="true"></span> Friends
+                </NavLink>
+            </li>
+        }
     </ul>
 </div>
 
@@ -35,8 +43,19 @@
 
     private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
+    protected System.Security.Claims.ClaimsPrincipal user; 
+
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
     }
+
+    [CascadingParameter] protected Task<AuthenticationState> AuthStat { get; set; }
+
+    protected async override Task OnInitializedAsync()
+    {
+        base.OnInitialized();
+        user = (await AuthStat).User;
+    }
+
 }

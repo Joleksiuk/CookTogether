@@ -13,9 +13,9 @@
     <DataAnnotationsValidator />
     <ValidationSummary />
 
-    <InputText id="id"@bind-Value="newUser.id" />
-    <InputText id="username" @bind-Value="newUser.username" />
-    <InputText id="password_hash" @bind-Value="newUser.password_hash" />
+    <InputText id="id"@bind-Value="newUser.Id" />
+    <InputText id="username" @bind-Value="newUser.Username" />
+    <InputText id="password_hash" @bind-Value="newUser.PasswordHash" />
 
     <button type="submit" class="btn btn-primary">Submit</button>
 
@@ -40,9 +40,9 @@ else
             @foreach(var user in users)
                 {
             <tr>
-                <td>@user.id</td>
-                <td>@user.username</td>
-                <td>@user.password_hash</td>
+                <td>@user.Id</td>
+                <td>@user.UserName</td>
+                <td>@user.PasswordHash</td>
             </tr>
                 }
         </tbody>
@@ -51,7 +51,7 @@ else
 
 
 @code {
-    
+
     private List<UserModel> users;
     private DisplayUserModel newUser = new DisplayUserModel();
 
@@ -65,13 +65,13 @@ else
     {
         UserModel userModel = new UserModel
         {
-            id = Int32.Parse(newUser.id),
-            username = newUser.username,
-            password_hash = newUser.password_hash
+            Id = newUser.Id,
+            UserName = newUser.Username,
+            PasswordHash = newUser.PasswordHash
         };
 
-    await _db.InsertUser(userModel);
-    users.Add(userModel);
-    newUser = new DisplayUserModel();
+        await _db.InsertUser(userModel);
+        users.Add(userModel);
+        newUser = new DisplayUserModel();
     }
 }

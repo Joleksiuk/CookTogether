@@ -18,15 +18,28 @@ namespace DataAccessLibrary
 
         public Task<List<UserModel>> GetUsers()
         {
-            string sql = @"select * from [dbo].[User]";
+            string sql = @"select * from [dbo].[AspNetUsers]";
+            return _db.LoadData<UserModel, dynamic>(sql, new { });
+        }
+        public Task<List<UserModel>> GetUsersExcludingUser(UserModel user)
+        {
+            string sql = @"select * from [dbo].[AspNetUsers] WHERE Id != '"+user.Id+"'";
             return _db.LoadData<UserModel, dynamic>(sql, new { });
         }
 
         public Task InsertUser(UserModel user)
         {
-            string sql = @"insert into [dbo].[User] (id, username, password_hash)
-                            VALUES (@id, @username, @password_hash)";
+            string sql = @"insert into [dbo].[AspNetUsers] (Id, Username, PasswordHash)
+                            VALUES (@Id, @UserName, @PasswordHash)";
             return _db.SaveData(sql, user);
+        }
+
+        public async Task<UserModel> GetUserById(string id)
+        {
+            List<UserModel> users = await GetUsers();
+
+            string sql = @"SELECT * From [dbo].[AspNetUsers] WHERE Id= '" + id + "'";
+            return await _db.LoadSingleResult<UserModel, dynamic>(sql, new { });
         }
     }
 }

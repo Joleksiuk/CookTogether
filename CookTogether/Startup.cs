@@ -50,6 +50,7 @@ namespace CookTogether
             //DATABASE CONNECTION
             services.AddTransient<ISqlDataAccess, SqlDataAccess>();
             services.AddTransient<IUserRepository, UserRepository>();
+            services.AddTransient<IFriendshipsRepository, FriendshipsRepository>();
 
             //API CLIENT
             services.AddSingleton<MealApiService>();
