@@ -6,10 +6,9 @@ using System.Threading.Tasks;
 
 namespace DataAccessLibrary.Models
 {
-    public class UserModel
+    public class FriendshipModel
     {
-        public string Id { get; set; }
-        public string UserName { get; set; }     
-        public string PasswordHash { get; set; }
+        public string FirstUserId { get; set; }
+        public string SecondUserId { get; set; }
     }
 }

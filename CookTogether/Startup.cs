@@ -48,11 +48,14 @@ namespace CookTogether
 
             //DATABASE CONNECTION
             services.AddTransient<ISqlDataAccess, SqlDataAccess>();
-            services.AddTransient<IUserData, UserData>();
+            services.AddTransient<IUserRepository, UserRepository>();
+            services.AddTransient<IFriendshipsRepository, FriendshipsRepository>();
 
             //API CLIENT
             services.AddSingleton<MealApiService>();
             services.AddHttpClient();
+
+           
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
