@@ -23,7 +23,7 @@ namespace DataAccessLibrary
         }
         public Task<List<UserModel>> GetUsersExcludingUser(UserModel user)
         {
-            string sql = @"select * from [dbo].[AspNetUsers] WHERE Id != '" + user.Id + "'";
+            string sql = @"select * from [dbo].[AspNetUsers] WHERE Id != '"+user.Id+"'";
             return _db.LoadData<UserModel, dynamic>(sql, new { });
         }
 
@@ -38,9 +38,9 @@ namespace DataAccessLibrary
         {
             List<UserModel> users = await GetUsers();
             UserModel foundUser = new UserModel();
-            foreach (var user in users)
+            foreach(var user in users)
             {
-                if (user.Id == id)
+                if(user.Id == id)
                 {
                     foundUser = user;
                     break;
