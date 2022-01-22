@@ -1,7 +1,8 @@
 ﻿@page "/fetchdata"
 
 @using CookTogether.Models.Api
-@inject MealApiService MealApiService
+@inject MealApiService mealApiService
+@inject DatabaseInitService databaseInitService
 
 <h1>Weather forecast</h1>
 
@@ -13,6 +14,7 @@
 }
 else
 {
+    <button @onclick="InitDatabase">Init database</button>
     <table class="table">
         <thead>
             <tr>
@@ -23,7 +25,6 @@ else
             </tr>
         </thead>
         <tbody>
-
             @foreach (var area in areas)
             {
                 <tr>
@@ -76,9 +77,14 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        areas = await MealApiService.getAreas();
-        categories = await MealApiService.getCategories();
-        ingredients = await MealApiService.getIngredients();
-        meals = await MealApiService.getMealsStartingWith("a");
+        areas = await mealApiService.GetAreas();
+        categories = await mealApiService.GetCategories();
+        ingredients = await mealApiService.GetIngredients();
+        meals = await mealApiService.GetMealsStartingWith("a");
+    }
+
+    protected async Task InitDatabase()
+    {
+        await databaseInitService.RunInit();
     }
 }
