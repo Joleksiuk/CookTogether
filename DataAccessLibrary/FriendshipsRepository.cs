@@ -25,27 +25,30 @@ namespace DataAccessLibrary
         public Task<List<UserModel>> GetFriendListOfUser(string Id)
         {
             string sql = @"SELECT users.Id, users.Username  FROM [dbo].[AspNetUsers] as users
-WHERE users.Id IN (
-    SELECT [FirstUserID]
-    FROM [dbo].[AspFriendships]
-    WHERE [SecondUserID] = " + $"'{Id}'" +
-"UNION " +
-"SELECT [SecondUserID]" +
-"FROM [dbo].[AspFriendships]" +
-"WHERE [FirstUserID] = " + $"'{Id}')";
+                            WHERE users.Id IN (
+                                SELECT [FirstUserID]
+                                FROM [dbo].[AspFriendships]
+                                WHERE [SecondUserID] = " + $"'{Id}'" +
+                            "UNION " +
+                            "SELECT [SecondUserID]" +
+                            "FROM [dbo].[AspFriendships]" +
+                            "WHERE [FirstUserID] = " + $"'{Id}')";
             return _db.LoadData<UserModel, dynamic>(sql, new { });
         }
+
         public Task<List<UserModel>> GetNOTFriendedListOfUser(string Id)
         {
             string sql = @"SELECT users.Id, users.Username  FROM [dbo].[AspNetUsers] as users
-WHERE users.Id NOT IN (
-    SELECT [FirstUserID]
-    FROM [dbo].[AspFriendships]
-    WHERE [SecondUserID] = "+ $"'{Id}'" +
-    "UNION " +
-    "SELECT [SecondUserID]" +
-    "FROM [dbo].[AspFriendships]" +
-    "WHERE [FirstUserID] = " + $"'{Id}')";
+                            WHERE  users.Id <> " + $"'{Id}' " +
+                            @"AND users.Id NOT IN (
+                                SELECT [FirstUserID]
+                                FROM [dbo].[AspFriendships]
+                                WHERE [SecondUserID] = " + $"'{Id}'" +
+                                @"UNION 
+                                SELECT [SecondUserID]
+                                FROM [dbo].[AspFriendships]
+                                WHERE [FirstUserID] = " + $"'{Id}')"
+                              ;
             return _db.LoadData<UserModel, dynamic>(sql, new { });
         }
 
@@ -55,7 +58,6 @@ WHERE users.Id NOT IN (
                             VALUES (@FirstUserId, @SecondUserId)";
             return _db.SaveData(sql, friend);
         }
-
 
         public Task RemoveFriendship(UserModel friend1, UserModel friend2)
         {
@@ -71,3 +73,4 @@ WHERE users.Id NOT IN (
         }
     }
 }
+
