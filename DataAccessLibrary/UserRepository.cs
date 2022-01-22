@@ -37,16 +37,9 @@ namespace DataAccessLibrary
         public async Task<UserModel> GetUserById(string id)
         {
             List<UserModel> users = await GetUsers();
-            UserModel foundUser = new UserModel();
-            foreach(var user in users)
-            {
-                if(user.Id == id)
-                {
-                    foundUser = user;
-                    break;
-                }
-            }
-            return foundUser;
+
+            string sql = @"SELECT * From [dbo].[AspNetUsers] WHERE Id= '" + id + "'";
+            return await _db.LoadSingleResult<UserModel, dynamic>(sql, new { });
         }
     }
 }

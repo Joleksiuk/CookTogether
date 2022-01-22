@@ -7,21 +7,19 @@
 @inject IUserRepository UserRepository
 @inject IFriendshipsRepository FriendshipRepository
 
-<!-- IF user is logged in AuthenticationState is not null-->
-
-@if (friendableUsers == null || friendships == null || friendlist ==null)
+@if (friendableUsers == null || friendships == null || friendlist == null)
 {
     <p>Loading data...</p>
 }
 else
-{         
+{
     <h3>Friends</h3>
 
     <p>Clicked User ID: @clickedUser</p>
     <p> Logged User ID:@loggedUserID</p>
 
 
-    <h3>All Users</h3>
+    <h3>Available Users</h3>
     <table class="table table-striped">
         <thread>
             <tr>
@@ -39,7 +37,7 @@ else
             }
         </tbody>
     </table>
-    
+
 
     <h3>Your Friendlist</h3>
     <table class="table table-striped">
@@ -56,25 +54,6 @@ else
                     <td>@friend.Id</td>
                     <td>@friend.UserName</td>
                     <td> <button @onclick="() => removeFriend(friend)">Remove friend</button></td>
-                </tr>
-            }
-        </tbody>
-    </table>
-
-    <h3>All friendships</h3>
-    <table class="table table-striped">
-        <thread>
-            <tr>
-                <th>First User ID</th>
-                <th>Second User ID</th>
-            </tr>
-        </thread>
-        <tbody>
-            @foreach (var friendship in friendships)
-            {
-                <tr>
-                    <td>@friendship.FirstUserId</td>
-                    <td>@friendship.SecondUserId</td>
                 </tr>
             }
         </tbody>
@@ -108,11 +87,11 @@ else
         users = await UserRepository.GetUsers();
         friendships = await FriendshipRepository.GetFriendships();
         authenticationState = await authStateTask;
-        
+
         loggedUserID = authenticationState.User.Claims.FirstOrDefault().Value;
         loggedUser = await UserRepository.GetUserById(loggedUserID);
         friendlist = await FriendshipRepository.GetFriendListOfUser(loggedUserID);
-        friendableUsers = await FriendshipRepository.GetNOTFriendedListOfUser(loggedUserID);   
+        friendableUsers = await FriendshipRepository.GetNOTFriendedListOfUser(loggedUserID);
 
     }
 
