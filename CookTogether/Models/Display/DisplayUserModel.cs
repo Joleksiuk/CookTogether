@@ -9,12 +9,12 @@ namespace CookTogether.Models
     public class DisplayUserModel
     {
 
-        public string id { get; set; }
+        public string Id { get; set; }
 
         [Required]
         [StringLength(15, ErrorMessage = "Username is too long")]
         [MinLength(5, ErrorMessage = "Username is too short")]
-        public string username { get; set; }
-        public string password_hash { get; set; }
+        public string Username { get; set; }
+        public string PasswordHash { get; set; }
     }
 }

@@ -4,27 +4,24 @@
 @using DataAccessLibrary.Models
 @using CookTogether.Models
 
-@inject IUserData UserRepository
+@inject IUserRepository UserRepository
+@inject IFriendshipsRepository FriendshipRepository
 
-<h3>Friends</h3>
+<!-- IF user is logged in AuthenticationState is not null-->
 
-<h4>Current Users</h4>
-
-<p>Current count: @currentCount</p>
-
-@if (astate != null)
+@if (friendableUsers == null || friendships == null || friendlist ==null)
 {
-    <p>
-        Name:@astate.User.Identity.Name
-    </p>
-}
-
-@if (users is null)
-{
-    <p><em>Loading data...</em></p>
+    <p>Loading data...</p>
 }
 else
-{
+{         
+    <h3>Friends</h3>
+
+    <p>Clicked User ID: @clickedUser</p>
+    <p> Logged User ID:@loggedUserID</p>
+
+
+    <h3>All Users</h3>
     <table class="table table-striped">
         <thread>
             <tr>
@@ -32,11 +29,52 @@ else
             </tr>
         </thread>
         <tbody>
-            @foreach (var user in users)
+            @foreach (var user in friendableUsers)
             {
                 <tr>
-                    <td>@user.username</td>
-                    <td> <button @onclick="()=> addFriend(user)">Add friend</button></td>
+                    <td>@user.UserName</td>
+                    <td>@user.Id</td>
+                    <td> <button @onclick="() => addFriend(user)">Add friend</button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    
+
+    <h3>Your Friendlist</h3>
+    <table class="table table-striped">
+        <thread>
+            <tr>
+                <th>First User ID</th>
+                <th>Second User ID</th>
+            </tr>
+        </thread>
+        <tbody>
+            @foreach (var friend in friendlist)
+            {
+                <tr>
+                    <td>@friend.Id</td>
+                    <td>@friend.UserName</td>
+                    <td> <button @onclick="() => removeFriend(friend)">Remove friend</button></td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <h3>All friendships</h3>
+    <table class="table table-striped">
+        <thread>
+            <tr>
+                <th>First User ID</th>
+                <th>Second User ID</th>
+            </tr>
+        </thread>
+        <tbody>
+            @foreach (var friendship in friendships)
+            {
+                <tr>
+                    <td>@friendship.FirstUserId</td>
+                    <td>@friendship.SecondUserId</td>
                 </tr>
             }
         </tbody>
@@ -46,23 +84,79 @@ else
 
 @code {
 
-    private string currentCount = "";
+    //Currently logged user identity
+    [CascadingParameter]
+    private Task<AuthenticationState> authStateTask { get; set; }
+    private AuthenticationState authenticationState;
+    private string clickedUser = "";
+    private string loggedUserID;
+    private UserModel loggedUser;
+
+    //USERS
     private List<UserModel> users;
+    private List<UserModel> friendableUsers;
     private DisplayUserModel newUser = new DisplayUserModel();
 
-    [CascadingParameter]
-    private Task<AuthenticationState> AuthenticationState { get; set; }
-    private AuthenticationState astate;
+
+    //FRIENDSHIPS
+    private List<FriendshipModel> friendships;
+    private List<UserModel> friendlist;
+
 
     protected override async Task OnInitializedAsync()
     {
         users = await UserRepository.GetUsers();
-         var userState = await AuthenticationState;
+        friendships = await FriendshipRepository.GetFriendships();
+        authenticationState = await authStateTask;
+        
+        loggedUserID = authenticationState.User.Claims.FirstOrDefault().Value;
+        loggedUser = await UserRepository.GetUserById(loggedUserID);
+        friendlist = await FriendshipRepository.GetFriendListOfUser(loggedUserID);
+        friendableUsers = await FriendshipRepository.GetNOTFriendedListOfUser(loggedUserID);   
 
     }
 
-    private void addFriend(UserModel user)
+    private void addFriend(UserModel friend)
     {
-        currentCount = user.username;
+        clickedUser = friend.Id;
+        FriendshipModel friendshipModel = new FriendshipModel
+        {
+            FirstUserId = friend.Id,
+            SecondUserId = loggedUserID
+        };
+
+        FriendshipRepository.InsertFriendship(friendshipModel);
+        friendships.Add(friendshipModel);
+        friendlist.Add(friend);
+        friendableUsers.Remove(friend);
     }
+
+
+    private void removeFriendshipFromList(UserModel friend1, UserModel friend2)
+    {
+        foreach (var friendship in friendships)
+        {
+            if (friendship.FirstUserId == friend1.Id && friendship.SecondUserId == friend2.Id)
+            {
+                friendships.Remove(friendship);
+                break;
+            }
+            else if (friendship.SecondUserId == friend1.Id && friendship.FirstUserId == friend2.Id)
+            {
+                friendships.Remove(friendship);
+                break;
+            }
+
+        }
+    }
+
+    private void removeFriend(UserModel friend)
+    {
+        clickedUser = friend.Id;
+        removeFriendshipFromList(friend, loggedUser);
+        friendlist.Remove(friend);
+        friendableUsers.Add(friend);
+        FriendshipRepository.RemoveFriendship(friend, loggedUser);
+    }
+
 }

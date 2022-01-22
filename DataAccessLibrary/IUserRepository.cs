@@ -8,5 +8,7 @@ namespace DataAccessLibrary
     {
         Task<List<UserModel>> GetUsers();
         Task InsertUser(UserModel user);
+        Task<UserModel> GetUserById(string id);
+
     }
 }
