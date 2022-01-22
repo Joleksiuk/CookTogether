@@ -4,16 +4,17 @@ using System.Linq;
 using System.Threading.Tasks;
 using CookTogether.Models.Api;
 using DataAccessLibrary;
+using DataAccessLibrary.MealRepositories;
 using DataAccessLibrary.Models;
 
 namespace CookTogether
 {
     public class DatabaseInitService
     {
-        private readonly Repositories repositories;
+        private readonly MealRepositories repositories;
         private readonly MealApiService mealApiService;
 
-        public DatabaseInitService(MealApiService mealApiService, Repositories repositories)
+        public DatabaseInitService(MealApiService mealApiService, MealRepositories repositories)
         {
             this.repositories = repositories;
             this.mealApiService = mealApiService;

@@ -4,16 +4,16 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataAccessLibrary
+namespace DataAccessLibrary.MealRepositories
 {
-    public class Repositories
+    public class MealRepositories
     {
         public IAreaRepository AreaRepository { get; }
         public ICategoryRepository CategoryRepository { get; }
         public IIngredientRepository IngredientRepository { get; }
         public IMealRepository MealRepository { get; }
 
-        public Repositories(IAreaRepository areaRepository,
+        public MealRepositories(IAreaRepository areaRepository,
                             ICategoryRepository categoryRepository,
                             IIngredientRepository ingredientRepository,
                             IMealRepository mealRepository)
