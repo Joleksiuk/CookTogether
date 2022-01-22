@@ -20,6 +20,7 @@ using System.Threading.Tasks;
 using CookTogether.Data.MyData;
 using CookTogether.Models;
 using Microsoft.Extensions.Logging;
+using DataAccessLibrary.MealRepositories;
 
 namespace CookTogether
 {
@@ -62,7 +63,7 @@ namespace CookTogether
             services.AddTransient<IIngredientRepository, IngredientRepository>();
             services.AddTransient<IMealRepository, MealRepository>();
 
-            services.AddSingleton<Repositories>();
+            services.AddSingleton<MealRepositories>();
 
             //INIT SERVICE
             services.AddSingleton<DatabaseInitService>();

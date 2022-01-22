@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DataAccessLibrary
+namespace DataAccessLibrary.MealRepositories
 {
     public class CategoryRepository : ICategoryRepository
     {
