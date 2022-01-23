@@ -16,16 +16,10 @@ namespace DataAccessLibrary.MealRepositories
             _db = db;
         }
 
-        public Task DeleteAll()
+        public Task<AreaModel> GetAreaByName(string name)
         {
-            string sql = @"delete from [dbo].[Area]";
-            return _db.SaveData(sql, new { });
-        }
-
-        public Task<List<AreaModel>> GetAreaByName(string name)
-        {
-            string sql = @"select * from [dbo].[Area] where [dbo].[Area].[Name]=" + $"'{name}'";
-            return _db.LoadData<AreaModel, dynamic>(sql, new { });
+            string sql = @"select * from [dbo].[Area] where [dbo].[Area].[Name]=@Name";
+            return _db.LoadSingleResult<AreaModel, dynamic>(sql, new { Name = name });
         }
 
         public Task<List<AreaModel>> GetAreas()
@@ -34,9 +28,14 @@ namespace DataAccessLibrary.MealRepositories
             return _db.LoadData<AreaModel, dynamic>(sql, new { });
         }
 
-        public Task InsertAreas(List<AreaModel> areaModels)
+        public Task InsertAreasIfNotExists(List<AreaModel> areaModels)
         {
-            string sql = @"insert into [dbo].[Area] (Id, Name) values (@Id, @Name)";
+            string sql =
+                @"IF NOT EXISTS(SELECT * FROM [dbo].[Area] WHERE [dbo].[Area].[Name] = @Name)
+                BEGIN
+                    INSERT INTO[dbo].[Area] (Name)
+                    VALUES(@Name)
+                END";
             return _db.SaveData(sql, areaModels);
         }
     }

@@ -10,8 +10,7 @@ namespace DataAccessLibrary.MealRepositories
     public interface IIngredientRepository
     {
         Task<List<IngredientModel>> GetIngredients();
-        Task<List<IngredientModel>> GetIngredientsByName(string name);
-        Task InsertIngredients(List<IngredientModel> ingredients);
-        Task DeleteAll();
+        Task<List<IngredientModel>> GetIngredientsByNames(List<string> names);
+        Task InsertOrUpdateIngredients(List<IngredientModel> ingredients);
     }
 }

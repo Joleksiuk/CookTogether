@@ -10,8 +10,7 @@ namespace DataAccessLibrary.MealRepositories
     public interface IAreaRepository
     {
         Task<List<AreaModel>> GetAreas();
-        Task<List<AreaModel>> GetAreaByName(string name);
-        Task InsertAreas(List<AreaModel> areaModels);
-        Task DeleteAll();
+        Task<AreaModel> GetAreaByName(string name);
+        Task InsertAreasIfNotExists(List<AreaModel> areaModels);
     }
 }

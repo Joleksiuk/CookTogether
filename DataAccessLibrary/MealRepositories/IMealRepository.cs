@@ -10,10 +10,7 @@ namespace DataAccessLibrary.MealRepositories
     public interface IMealRepository
     {
         Task<List<MealModel>> GetMeals();
-        Task InsertMeals(List<MealModel> meals);
-        Task DeleteAllMeals();
-        Task DeleteAllMealIngredients();
-
-        Task InsertMealIngredients(List<RecipeIngredientModel> mealIngredients);
+        Task InsertOrUpdateMeals(List<MealModel> meals);
+        Task InsertOrUpdateMealIngredients(List<RecipeIngredientModel> mealIngredients);
     }
 }

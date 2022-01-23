@@ -16,35 +16,48 @@ namespace DataAccessLibrary.MealRepositories
             _db = db;
         }
 
-        public Task DeleteAllMeals()
-        {
-            string sql = @"delete from [dbo].[Meal]";
-            return _db.SaveData(sql, new { });
-        }
-
-        public Task DeleteAllMealIngredients()
-        {
-            string sql = @"delete from [dbo].[RecipeIngredient]";
-            return _db.SaveData(sql, new { });
-        }
-
         public Task<List<MealModel>> GetMeals()
         {
             string sql = @"select * from [dbo].[Meal]";
             return _db.LoadData<MealModel, dynamic>(sql, new { });
         }
 
-        public Task InsertMealIngredients(List<RecipeIngredientModel> mealIngredients)
+        public Task InsertOrUpdateMealIngredients(List<RecipeIngredientModel> mealIngredients)
         {
-            string sql = @"insert into [dbo].[RecipeIngredient] (MealId, IngredientId, Measure)
-                            values(@MealId, @IngredientId, @Measure)";
+            string sql =
+            @"IF EXISTS(SELECT * FROM [dbo].[RecipeIngredient] WHERE [MealId] = @MealId AND [IngredientId] = @IngredientId)
+                BEGIN
+                    UPDATE [dbo].[RecipeIngredient] 
+                    SET [Measure] = @Measure
+                    WHERE [MealId] = @MealId AND [IngredientId] = @IngredientId
+                END
+            ELSE
+                BEGIN
+                    INSERT INTO [dbo].[RecipeIngredient] (MealId, IngredientId, Measure)
+                            values(@MealId, @IngredientId, @Measure)
+                END";
+
             return _db.SaveData(sql, mealIngredients);
         }
 
-        public Task InsertMeals(List<MealModel> meals)
+        public Task InsertOrUpdateMeals(List<MealModel> meals)
         {
-            string sql = @"insert into [dbo].[Meal] (Id, Name, Recipe, ThumbnailUrl, CategoryId, AreaId)
-                            values (@Id, @Name, @Recipe, @ThumbnailUrl, @CategoryId, @AreaId)";
+            string sql =
+                @"IF EXISTS(SELECT * FROM [dbo].[Meal] WHERE [dbo].[Meal].[Id] = @Id)
+                    BEGIN
+                        UPDATE [dbo].[Meal] 
+                        SET [Name] = @Name,
+                            [Recipe] = @Recipe,
+                            [ThumbnailUrl] = @ThumbnailUrl,
+                            [CategoryId] = @CategoryId,
+                            [AreaId] = @AreaId
+                        WHERE [Id] = @Id
+                    END
+                ELSE
+                    BEGIN
+                        INSERT INTO [dbo].[Meal] (Id, Name, Recipe, ThumbnailUrl, CategoryId, AreaId)
+                            VALUES (@Id, @Name, @Recipe, @ThumbnailUrl, @CategoryId, @AreaId)
+                    END";
             return _db.SaveData(sql, meals);
         }
     }

@@ -3,54 +3,47 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using CookTogether.Models.Api;
-using DataAccessLibrary;
 using DataAccessLibrary.MealRepositories;
 using DataAccessLibrary.Models;
 
-namespace CookTogether
+namespace CookTogether.Data
 {
-    public class DatabaseInitService
+    public class DatabaseUpdateFromApiService
     {
         private readonly MealRepositories repositories;
         private readonly MealApiService mealApiService;
 
-        public DatabaseInitService(MealApiService mealApiService, MealRepositories repositories)
+        public DatabaseUpdateFromApiService(MealApiService mealApiService, MealRepositories repositories)
         {
             this.repositories = repositories;
             this.mealApiService = mealApiService;
         }
 
-        public async Task RunInit()
+        public async Task RunAll()
         {
-            await repositories.MealRepository.DeleteAllMealIngredients();
-            await repositories.MealRepository.DeleteAllMeals();
-
             await Task.WhenAll(
-                InitAreas(),
-                InitCategories(),
-                InitIngredients());
-            await InitMeals();
+                UpdateAreas(),
+                UpdateCategories(),
+                UpdateIngredients());
+            await UpdateMeals();
         }
 
-        private async Task InitAreas()
+        public async Task UpdateAreas()
         {
             Area[] areas = await mealApiService.GetAreas();
             
             List<AreaModel> areaModels = new();
-            int Id = 0;
             foreach(Area area in areas)
             {
                 areaModels.Add(new AreaModel()
                 {
-                    Id = Id++,
                     Name = area.Name
                 });
             }
-            await repositories.AreaRepository.DeleteAll();
-            await repositories.AreaRepository.InsertAreas(areaModels);
+            await repositories.AreaRepository.InsertAreasIfNotExists(areaModels);
         }
 
-        private async Task InitCategories()
+        public async Task UpdateCategories()
         {
             Category[] categories = await mealApiService.GetCategories();
             List<CategoryModel> categoryModels = new();
@@ -63,11 +56,10 @@ namespace CookTogether
                     ThumbnailUrl = category.ThumbnailUrl.ToString()
                 });
             }
-            await repositories.CategoryRepository.DeleteAll();
-            await repositories.CategoryRepository.InsertCategories(categoryModels);
+            await repositories.CategoryRepository.InsertOrUpdateCategories(categoryModels);
         }
 
-        private async Task InitIngredients()
+        public async Task UpdateIngredients()
         {
             Ingredient[] ingredients = await mealApiService.GetIngredients();
             List<IngredientModel> ingredientModels = new();
@@ -80,11 +72,10 @@ namespace CookTogether
                     ThumbnailUrl = ingredient.ThumbnailUrl.ToString()
                 });
             }
-            await repositories.IngredientRepository.DeleteAll();
-            await repositories.IngredientRepository.InsertIngredients(ingredientModels);
+            await repositories.IngredientRepository.InsertOrUpdateIngredients(ingredientModels);
         }
 
-        private async Task InitMeals()
+        public async Task UpdateMeals()
         {
             List<Meal> allMeals = new();
             List<MealModel> mealModels = new();
@@ -98,12 +89,15 @@ namespace CookTogether
 
             foreach(Meal meal in allMeals)
             {
-                List<CategoryModel> categoryList = await repositories.CategoryRepository.GetCategoryByName(meal.CategoryName);
-                List<AreaModel> areaList = await repositories.AreaRepository.GetAreaByName(meal.AreaName);
+                var categoryTask = repositories.CategoryRepository.GetCategoryByName(meal.CategoryName);
+                var areaTask = repositories.AreaRepository.GetAreaByName(meal.AreaName);
+                var recipeIngredientsTask = CreateIngredientModelsForMeal(meal);
 
-                CategoryModel category = categoryList.FirstOrDefault();
-                AreaModel area = areaList.FirstOrDefault();
-                List<RecipeIngredientModel> recipeIngredients = await CreateIngredientModelsForMeal(meal);
+                await Task.WhenAll(categoryTask, areaTask, recipeIngredientsTask);
+
+                CategoryModel category = await categoryTask;
+                AreaModel area = await areaTask;
+                List<RecipeIngredientModel> recipeIngredients = await recipeIngredientsTask;
 
                 mealModels.Add(new MealModel()
                 {
@@ -118,8 +112,8 @@ namespace CookTogether
                 recipeIngredientModels.AddRange(recipeIngredients);
             }
 
-            await repositories.MealRepository.InsertMeals(mealModels);
-            await repositories.MealRepository.InsertMealIngredients(recipeIngredientModels);      
+            await repositories.MealRepository.InsertOrUpdateMeals(mealModels);
+            await repositories.MealRepository.InsertOrUpdateMealIngredients(recipeIngredientModels);      
         }
 
         private async Task<List<RecipeIngredientModel>> CreateIngredientModelsForMeal(Meal meal)
@@ -132,15 +126,7 @@ namespace CookTogether
             ingredientNames.RemoveAll(name => name == String.Empty);
             ingredientMeasures.RemoveAll(measure => measure == String.Empty);
 
-            List<IngredientModel> ingredientModels = new();
-            foreach(string ingredientName in ingredientNames)
-            {
-                List<IngredientModel> ingredients = await repositories.IngredientRepository.GetIngredientsByName(ingredientName);
-                if (ingredients.FirstOrDefault() != default)
-                {
-                    ingredientModels.Add(ingredients.First());
-                }
-            }
+            List<IngredientModel> ingredientModels = await repositories.IngredientRepository.GetIngredientsByNames(ingredientNames);
 
             foreach(var (model, measure) in ingredientModels.Zip(ingredientMeasures))
             {
