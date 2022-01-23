@@ -1,0 +1,130 @@
+﻿@page "/party-room/{RoomId:int}"
+
+@using DataAccessLibrary
+@using DataAccessLibrary.Models
+@using CookTogether.Models
+@using DataAccessLibrary.MealRepositories
+@using CookTogether.Data
+
+@inject IUserRepository UserRepository
+@inject IPartyRepository PartyRepository
+@inject PartyService PartyService 
+
+
+<h3>PartyRoom @RoomId</h3>
+@if (party == null || partyMembers == null || invitedUsers == null || otherUsers == null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <h3>Welcome to the @party.PartyName Party!</h3>
+
+    <h3>Party Members : </h3>
+    <table class="table table-striped">
+        <tbody>
+            @foreach (var user in partyMembers)
+            {
+                <tr>
+                    <td>@user.UserName</td>
+                    @if (party.OwnerUserId == loggedUserID && user.Id != party.OwnerUserId)
+                    {
+                        <td> <button type="button" class="btn btn-danger" @onclick="() =>RemoveUserFromParty(user)">Remove User from party</button></td>
+                    }
+
+                </tr>
+            }
+        </tbody>
+    </table>
+    <hr />
+    <h3>Currently Invited Users : </h3>
+    <table class="table table-striped">
+        <tbody>
+            @foreach (var user in invitedUsers)
+            {
+                <tr>
+                    <td>@user.UserName</td>
+                    @if (party.OwnerUserId == loggedUserID)
+                    {
+                        <td> <button type="button" class="btn btn-dark" @onclick="() =>CancelUserInvitationToParty(user)">Cancel Invitation</button></td>
+                    }
+
+                </tr>
+            }
+        </tbody>
+    </table>
+    <hr />
+    <h3>Friends you you could invite : </h3>
+    <table class="table table-striped">
+        <tbody>
+            @foreach (var user in otherUsers)
+            {
+                <tr>
+                    <td>@user.UserName</td>
+                    @if (party.OwnerUserId == loggedUserID)
+                    {
+                        <td> <button type="button" class="btn btn-primary" @onclick="() =>InviteUserToParty(user)">Invite User</button></td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@code {
+    [Parameter]
+    public int? RoomId { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authStateTask { get; set; }
+    private AuthenticationState authenticationState;
+    private string loggedUserID;
+
+    List<UserModel> partyMembers;
+    List<UserModel> invitedUsers;
+    List<UserModel> otherUsers;
+
+    PartyModel party;
+
+    protected override async Task OnInitializedAsync()
+    {
+        authenticationState = await authStateTask;
+        loggedUserID = authenticationState.User.Claims.FirstOrDefault().Value;
+        UserModel loggedUser = await UserRepository.GetUserById(loggedUserID);
+
+        party = await PartyRepository.GetPartyById(RoomId.ToString());
+        partyMembers = await PartyRepository.GetAllPartyMembers(party, loggedUser);
+        invitedUsers = await PartyRepository.GetUsersInvitedToParty(party, loggedUser);
+        otherUsers = await PartyRepository.GetNotInvitedNotMembersUsersToParty(party, loggedUser);
+
+        await InvokeAsync(() => StateHasChanged());
+    }
+
+    private void AddUserToParty(UserModel user)
+    {
+        PartyService.AddUserToParty(user, party);
+        partyMembers.Add(user);
+        otherUsers.Remove(user);
+    }
+
+    private void RemoveUserFromParty(UserModel user)
+    {
+        PartyService.RemoveUserFromParty(user, party);
+        partyMembers.Remove(user);
+        otherUsers.Add(user);
+    }
+
+    private void InviteUserToParty(UserModel user)
+    {
+        PartyService.InviteUserToParty(user, party);
+        invitedUsers.Add(user);
+        otherUsers.Remove(user);
+    }
+
+    private void CancelUserInvitationToParty(UserModel user)
+    {
+        PartyService.CancelUserInvitationToParty(user, party);
+        invitedUsers.Remove(user);
+        otherUsers.Add(user);
+    }
+}

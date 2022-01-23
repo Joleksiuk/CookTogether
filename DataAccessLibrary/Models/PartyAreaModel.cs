@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace DataAccessLibrary.Models
 {
-    public class PartyUserModel
+    public class PartyAreaModel
     {
-        public string UserId { get; set; }
-        public int PartyId { get; set; }
+        public int PartyId;
+        public int AreaId;
     }
 }
