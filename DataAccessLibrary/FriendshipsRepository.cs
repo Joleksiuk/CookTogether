@@ -1,4 +1,5 @@
-﻿using DataAccessLibrary.Models;
+﻿using Dapper;
+using DataAccessLibrary.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -28,28 +29,36 @@ namespace DataAccessLibrary
                             WHERE users.Id IN (
                                 SELECT [FirstUserID]
                                 FROM [dbo].[AspFriendships]
-                                WHERE [SecondUserID] = " + $"'{Id}'" +
-                            @"UNION 
-                            SELECT [SecondUserID]
-                            FROM [dbo].[AspFriendships]
-                            WHERE [FirstUserID] = " + $"'{Id}')";
-            return _db.LoadData<UserModel, dynamic>(sql, new { });
-        }
-
-        public Task<List<UserModel>> GetNOTFriendedListOfUser(string Id)
-        {
-            string sql = @"SELECT users.Id, users.Username  FROM [dbo].[AspNetUsers] as users
-                            WHERE  users.Id <> " + $"'{Id}' " +
-                            @"AND users.Id NOT IN (
-                                SELECT [FirstUserID]
-                                FROM [dbo].[AspFriendships]
-                                WHERE [SecondUserID] = " + $"'{Id}'" +
-                                @"UNION 
+                                WHERE [SecondUserID]=@UserId
+                            UNION 
                                 SELECT [SecondUserID]
                                 FROM [dbo].[AspFriendships]
-                                WHERE [FirstUserID] = " + $"'{Id}')"
-                              ;
-            return _db.LoadData<UserModel, dynamic>(sql, new { });
+                                WHERE [FirstUserID]=@UserId)";
+            return _db.LoadData<UserModel, dynamic>(sql, new { UserId = Id });
+        }
+
+        public Task<List<UserModel>> GetNotFriendedAndNotInvitedListOfUser(string Id, string UserName="")
+        {
+            string sql = @"SELECT users.Id, users.UserName  FROM [dbo].[AspNetUsers] as users
+                            WHERE users.Id <> @UserId
+                            AND users.Id NOT IN (
+                                SELECT [FirstUserID]
+                                FROM [dbo].[AspFriendships]
+                                WHERE [SecondUserID]=@UserId
+                                UNION 
+                                SELECT [SecondUserID]
+                                FROM [dbo].[AspFriendships]
+                                WHERE [FirstUserID]=@UserId
+                                UNION
+                                SELECT [InvitedUserId]
+                                FROM [FriendInvite]
+                                WHERE [InvitingUserId] = @UserId)";
+            if (UserName.Length > 0)
+            {
+                sql += "AND users.UserName LIKE @UserNameLike";
+                 return _db.LoadData<UserModel, dynamic>(sql, new { UserId = Id, UserNameLike = "%" + UserName + "%" });
+            }
+            return _db.LoadData<UserModel, dynamic>(sql, new { UserId = Id });
         }
 
         public Task InsertFriendship(FriendshipModel friend)
@@ -70,6 +79,42 @@ namespace DataAccessLibrary
                     WHERE  (FirstUserId = @FirstUserId AND SecondUserID = @SecondUserId) OR (FirstUserId = @SecondUserID AND SecondUserID = @FirstUserId)";
 
             return _db.SaveData(sql, friendshipModel);
+        }
+
+        public Task InsertFriendInvite(FriendInviteModel friendInvite)
+        {
+            string sql =
+                @"INSERT INTO [dbo].[FriendInvite] (InvitingUserId, InvitedUserId)
+                  VALUES (@InvitingUserId, @InvitedUserId)";
+            return _db.SaveData(sql, friendInvite);
+        }
+
+        public Task<List<UserModel>> GetInvitingUsersByInvitedUserId(string userId)
+        {
+            string sql =
+                @"SELECT [AspNetUsers].[Id], [AspNetUsers].[UserName] 
+                  FROM [dbo].[AspNetUsers]
+                  INNER JOIN [FriendInvite]
+                  ON [FriendInvite].[InvitedUserId] = @InvitedUserId AND [FriendInvite].[InvitingUserId] = [AspNetUsers].[Id]";
+            return _db.LoadData<UserModel, dynamic>(sql, new { InvitedUserId = userId });
+        }
+
+        public Task<List<UserModel>> GetInvitedUsersByInvitingUserId(string userId)
+        {
+            string sql =
+                @"SELECT [AspNetUsers].[Id], [AspNetUsers].[UserName] 
+                  FROM [dbo].[AspNetUsers]
+                  INNER JOIN [FriendInvite]
+                  ON [FriendInvite].[InvitingUserId] = @InvitingUserId AND [FriendInvite].[InvitedUserId] = [AspNetUsers].[Id]";
+            return _db.LoadData<UserModel, dynamic>(sql, new { InvitingUserId = userId });
+        }
+
+        public Task RemoveFriendInvite(FriendInviteModel friendInvite)
+        {
+            string sql =
+                @"DELETE FROM [dbo].[FriendInvite]
+                  WHERE [FriendInvite].[InvitingUserId] = @InvitingUserId AND [FriendInvite].[InvitedUserId] = @InvitedUserId";
+            return _db.SaveData(sql, friendInvite);
         }
     }
 }
