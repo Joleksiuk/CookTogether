@@ -6,13 +6,12 @@ using System.Threading.Tasks;
 
 namespace DataAccessLibrary.Models
 {
-    class PartyModel
+    public class PartyModel
     {
-        int Id { get; set; }
-        DateTime CreationDate { get; set; }
-        int CategoryId { get; set; }
-        int AreaId { get; set; }
-        string OwnerUserId { get; set; }
-        string Name { get; set; }
+        public int Id { get; set; }
+        public DateTime CreationDate { get; set; }
+        public string OwnerUserId { get; set; }
+        public string PartyName { get; set; }
+
     }
 }

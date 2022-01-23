@@ -1,0 +1,182 @@
+﻿@page "/parties/{text}"
+
+@using DataAccessLibrary
+@using DataAccessLibrary.Models
+@using CookTogether.Models
+@using DataAccessLibrary.ViewModels
+@using DataAccessLibrary.MealRepositories
+@using CookTogether.Data 
+
+@inject ICategoryRepository CategoryRepository
+@inject IAreaRepository AreaRepository
+@inject IPartyRepository PartyRepository
+@inject IUserRepository UserRepository
+@inject Blazored.Localisation.Services.IBrowserDateTimeProvider browserDateTimeProvider
+@inject NavigationManager NavManager
+@inject PartyService PartyService 
+
+<h1>Parties</h1>
+<hr />
+<h3>Create new Party</h3>
+@if (categories == null || areas == null || userParties == null ||pendingInvites==null)
+{
+    <p>Loading...</p>
+}
+else
+{
+    <div>
+    </div>
+    <div>
+        <EditForm Model="@party" OnValidSubmit="@InsertParty">
+            <div>
+                <label>Party Name</label>
+                <InputText @bind-Value="@party.PartyName" placeholder="party name..." />
+            </div>
+            <div>
+                <InputSelect @bind-Value="@categoryId" placeholder="category name...">
+                    @foreach (var category in categories)
+                        {
+                        <option value="@category.Id">@category.Name</option>
+                        }
+                </InputSelect>
+            </div>
+            <div>
+                <InputSelect @bind-Value="AreaId" placeholder="category name...">
+                    @foreach (var area in areas)
+                        {
+                        <option value="@area.Id">@area.Name</option>
+                        }
+                </InputSelect>
+            </div>
+            <button type="submit" class="btn btn-primary">Create Party</button>
+        </EditForm>
+    </div>
+    <div>
+        <h2>Parties you are currently in</h2>
+        <table class="table table-striped">
+            <tbody>
+                @foreach (var party in userParties)
+                {
+                    <tr>                       
+                        <td>@party.PartyName</td>
+                        <td> <button  type="button" class="btn btn-primary"@onclick="() => GoToParty(party.Id)">Go to Party Room</button></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div>
+        <h2>Pending invites</h2>
+        <table class="table table-striped">
+            <tbody>
+                @foreach (var invite in displayPendingInvites)
+                {
+                <tr>
+                    <td>@invite.PartyName</td>
+                    <td> <button type="button" class="btn btn-success" @onclick="() => AcceptInvitation(loggedUser, invite.PartyId)">Accept</button></td>
+                    <td> <button type="button" class="btn btn-danger" @onclick="() => DeclineInvitation(loggedUser,invite.PartyId)">Decline</button></td>
+                </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+@code {
+
+    [Parameter]
+    public string? Text { get; set; }
+
+    string currentLocalTime = "";
+
+    PartyModel party { get; set; }
+    List<CategoryModel> categories;
+    List<AreaModel> areas;
+    List<PartyModel> userParties;
+    List<PartyUserInviteModel> pendingInvites;
+    List<DisplayPartyInviteModel> displayPendingInvites;
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authStateTask { get; set; }
+    private AuthenticationState authenticationState;
+    private string loggedUserID;
+
+    int categoryId;
+    int AreaId;
+    string partyName;
+
+    string roomName;
+    UserModel loggedUser;
+
+    protected override async Task OnInitializedAsync()
+    {
+        party = new PartyModel();
+
+        authenticationState = await authStateTask;
+        loggedUserID = authenticationState.User.Claims.FirstOrDefault().Value;
+        loggedUser = await UserRepository.GetUserById(loggedUserID);
+
+        categories = await CategoryRepository.GetCategories();
+        areas = await AreaRepository.GetAreas();
+        userParties = await PartyRepository.GetUserParties(loggedUser);
+        pendingInvites = await PartyRepository.GetUserPendingInvites(loggedUser);
+        displayPendingInvites = await PartyRepository.GetUserPendingDisplayInvites(loggedUser);
+
+        await InvokeAsync(() => StateHasChanged());
+    }
+
+    private async Task InsertParty()
+    {
+
+        var browserDateTime = await browserDateTimeProvider.GetInstance();
+        currentLocalTime = browserDateTime.Now.ToString();
+        System.DateTime currentDate = DateTime.Parse(currentLocalTime);
+
+        PartyModel partyModel = new PartyModel
+        {
+            CreationDate = currentDate,
+            OwnerUserId = loggedUserID,
+            PartyName = party.PartyName
+        };
+
+        await PartyRepository.InsertParty(partyModel);
+        PartyModel newPartyModel = await PartyRepository.GetLatestUserParty(loggedUserID);
+
+        await PartyRepository.InsertPartyUser(loggedUser, newPartyModel);
+        NavManager.NavigateTo("/party-room/" + (newPartyModel.Id).ToString());
+    }
+
+    private async Task AcceptInvitation(UserModel user, int partyId)
+    {
+        PartyUserInviteModel invitation = await PartyRepository.GetInviteByIds(user.Id, partyId);
+        PartyModel party = await PartyRepository.GetPartyById(partyId.ToString());
+        PartyService.AddUserToParty(user, party);
+        PartyService.CancelUserInvitationToParty(user, party);
+        pendingInvites.Remove(invitation);
+        displayPendingInvites.Remove(displayPendingInvites.Find((pendingInvite) => pendingInvite.InvitedUserId == user.Id && pendingInvite.PartyId == partyId));
+        userParties.Add(party);
+    }
+
+    public async Task DeclineInvitation(UserModel user, int partyId)
+    {
+        PartyUserInviteModel invitation = await PartyRepository.GetInviteByIds(user.Id, partyId);
+        PartyModel party = await PartyRepository.GetPartyById(partyId.ToString());
+        PartyService.CancelUserInvitationToParty(user, party);
+        pendingInvites.Remove(invitation);
+        displayPendingInvites.Remove(displayPendingInvites.Find((pendingInvite) => pendingInvite.InvitedUserId == user.Id && pendingInvite.PartyId == partyId));
+    }
+
+    private void GoToParty(int partyID)
+    {
+        NavManager.NavigateTo("/party-room/" + partyID.ToString());
+    }
+
+    private async Task InitializeNameOfRoom(int partyId)
+    {
+        PartyModel party = await PartyRepository.GetPartyById(partyId.ToString());
+        roomName = party.PartyName;
+    }
+
+}
+

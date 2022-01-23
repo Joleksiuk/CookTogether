@@ -21,6 +21,7 @@ using CookTogether.Data.MyData;
 using CookTogether.Models;
 using Microsoft.Extensions.Logging;
 using DataAccessLibrary.MealRepositories;
+using Blazored.Localisation;
 
 namespace CookTogether
 {
@@ -52,6 +53,7 @@ namespace CookTogether
             services.AddTransient<ISqlDataAccess, SqlDataAccess>();
             services.AddTransient<IUserRepository, UserRepository>();
             services.AddTransient<IFriendshipsRepository, FriendshipsRepository>();
+            services.AddTransient<IPartyRepository, PartyRepository>();
 
             //API CLIENT
             services.AddSingleton<MealApiService>();
@@ -66,6 +68,10 @@ namespace CookTogether
             services.AddSingleton<MealRepositories>();
 
             //INIT SERVICE
+ 
+            services.AddSingleton<PartyService>();
+
+            services.AddBlazoredLocalisation();
             services.AddSingleton<DatabaseUpdateFromApiService>();
         }
 
