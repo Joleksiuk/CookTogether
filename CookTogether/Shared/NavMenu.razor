@@ -12,28 +12,21 @@
                 <span class="oi oi-home" aria-hidden="true"></span> Home
             </NavLink>
         </li>
-        <li class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="oi oi-plus" aria-hidden="true"></span> Counter
-            </NavLink>
-        </li>
-        <li class="nav-item px-3">
-            <NavLink class="nav-link" href="fetchdata">
-                <span class="oi oi-list-rich" aria-hidden="true"></span> Fetch data
-            </NavLink>
-        </li>
-        <li class="nav-item px-3">
-            <NavLink class="nav-link" href="users">
-                <span class="oi oi-plus" aria-hidden="true"></span> USERS
-            </NavLink>
-        </li>
-        @if(user.Identity.IsAuthenticated)
+        @if (user.Identity.IsAuthenticated)
         {
             <li class="nav-item px-3">
                 <NavLink class="nav-link" href="friends">
                     <span class="oi oi-people" aria-hidden="true"></span> Friends
                 </NavLink>
             </li>
+            @if (user.IsInRole("Admin"))
+            {
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="admin">
+                        <span class="oi oi-list-rich" aria-hidden="true"></span> Admin
+                    </NavLink>
+                </li>
+            }
         }
     </ul>
 </div>
@@ -43,19 +36,18 @@
 
     private string NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
-    protected System.Security.Claims.ClaimsPrincipal user; 
+    protected System.Security.Claims.ClaimsPrincipal user;
 
     private void ToggleNavMenu()
     {
         collapseNavMenu = !collapseNavMenu;
     }
 
-    [CascadingParameter] protected Task<AuthenticationState> AuthStat { get; set; }
+    [CascadingParameter] protected Task<AuthenticationState> AuthState { get; set; }
 
     protected async override Task OnInitializedAsync()
     {
         base.OnInitialized();
-        user = (await AuthStat).User;
+        user = (await AuthState).User;
     }
-
 }

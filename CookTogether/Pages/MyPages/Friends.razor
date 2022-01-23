@@ -6,6 +6,7 @@
 
 @inject IUserRepository UserRepository
 @inject IFriendshipsRepository FriendshipRepository
+@attribute [Authorize]
 
 @if (friendableUsers == null || friendships == null || friendlist == null)
 {
@@ -13,17 +14,35 @@
 }
 else
 {
-    <h3>Friends</h3>
+    <h2>Friends</h2>
+    @if (friendlist.Any())
+    {
+        <h4>Your Friendlist</h4>
+        <table class="table table-striped">
+            <thread>
+                <tr>
+                    <th>Friend name</th>
+                    <th></th>
+                </tr>
+            </thread>
+            <tbody>
+                @foreach (var friend in friendlist)
+                {
+                    <tr>
+                        <td>@friend.UserName</td>
+                        <td> <button class="btn btn-danger" @onclick="() => removeFriend(friend)">Remove friend</button></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
 
-    <p>Clicked User ID: @clickedUser</p>
-    <p> Logged User ID:@loggedUserID</p>
-
-
-    <h3>Available Users</h3>
+    <h4>Available Users</h4>
     <table class="table table-striped">
         <thread>
             <tr>
-                <th>username</th>
+                <th>Username</th>
+                <th></th>
             </tr>
         </thread>
         <tbody>
@@ -31,33 +50,14 @@ else
             {
                 <tr>
                     <td>@user.UserName</td>
-                    <td>@user.Id</td>
-                    <td> <button @onclick="() => addFriend(user)">Add friend</button></td>
+                    <td> <button class="btn btn-primary" @onclick="() => addFriend(user)">Add friend</button></td>
                 </tr>
             }
         </tbody>
     </table>
 
 
-    <h3>Your Friendlist</h3>
-    <table class="table table-striped">
-        <thread>
-            <tr>
-                <th>First User ID</th>
-                <th>Second User ID</th>
-            </tr>
-        </thread>
-        <tbody>
-            @foreach (var friend in friendlist)
-            {
-                <tr>
-                    <td>@friend.Id</td>
-                    <td>@friend.UserName</td>
-                    <td> <button @onclick="() => removeFriend(friend)">Remove friend</button></td>
-                </tr>
-            }
-        </tbody>
-    </table>
+
 }
 
 

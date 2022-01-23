@@ -16,27 +16,31 @@ namespace DataAccessLibrary.MealRepositories
             _db = db;
         }
 
-        public Task DeleteAll()
-        {
-            string sql = @"delete from [dbo].[Category]";
-            return _db.SaveData(sql, new { });
-        }
-
         public Task<List<CategoryModel>> GetCategories()
         {
             string sql = @"select * from [dbo].[Category]";
             return _db.LoadData<CategoryModel, dynamic>(sql, new { });
         }
 
-        public Task<List<CategoryModel>> GetCategoryByName(string name)
+        public Task<CategoryModel> GetCategoryByName(string name)
         {
-            string sql = @"select * from [dbo].[Category] where [dbo].[Category].[Name]=" + $"'{name}'";
-            return _db.LoadData<CategoryModel, dynamic>(sql, new { });
+            string sql = @"select * from [dbo].[Category] where [dbo].[Category].[Name]=@Name";
+            return _db.LoadSingleResult<CategoryModel, dynamic>(sql, new { Name = name });
         }
 
-        public Task InsertCategories(List<CategoryModel> categories)
+        public Task InsertOrUpdateCategories(List<CategoryModel> categories)
         {
-            string sql = @"insert into [dbo].[Category] (Id, Name, ThumbnailUrl) values (@Id, @Name, @ThumbnailUrl)";
+            string sql =
+                @"IF EXISTS(SELECT * FROM [dbo].[Category] WHERE [dbo].[Category].[Id] = @Id)
+                    BEGIN
+                        UPDATE[dbo].[Category] SET [Name] = @Name, [ThumbnailUrl]= @ThumbnailUrl
+                        WHERE[Id] = @Id
+                    END
+                ELSE
+                    BEGIN
+                        INSERT INTO[dbo].[Category] (Id, ThumbnailUrl, Name)
+                        VALUES(@Id, @ThumbnailUrl, @Name)
+                    END";
             return _db.SaveData(sql, categories);
         }
     }

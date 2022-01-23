@@ -10,8 +10,7 @@ namespace DataAccessLibrary.MealRepositories
     public interface ICategoryRepository
     {
         Task<List<CategoryModel>> GetCategories();
-        Task InsertCategories(List<CategoryModel> categories);
-        Task<List<CategoryModel>> GetCategoryByName(string name);
-        Task DeleteAll();
+        Task InsertOrUpdateCategories(List<CategoryModel> categories);
+        Task<CategoryModel> GetCategoryByName(string name);
     }
 }

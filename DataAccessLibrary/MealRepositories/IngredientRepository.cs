@@ -16,17 +16,11 @@ namespace DataAccessLibrary.MealRepositories
             _db = db;
         }
 
-        public Task DeleteAll()
-        {
-            string sql = @"delete from [dbo].[Ingredient]";
-            return _db.SaveData(sql, new { });
-        }
-
-        public Task<List<IngredientModel>> GetIngredientsByName(string name)
+        public Task<List<IngredientModel>> GetIngredientsByNames(List<string> names)
         {
             string sql = @"select * from [dbo].[Ingredient]
-                            where [dbo].[Ingredient].[Name]=" + $"'{name}'";
-            return _db.LoadData<IngredientModel, dynamic>(sql, new { });
+                            where [dbo].[Ingredient].[Name] IN @Names";
+            return _db.LoadData<IngredientModel, dynamic>(sql, new { Names = names });
         }
 
         public Task<List<IngredientModel>> GetIngredients()
@@ -35,9 +29,19 @@ namespace DataAccessLibrary.MealRepositories
             return _db.LoadData<IngredientModel, dynamic>(sql, new { });
         }
 
-        public Task InsertIngredients(List<IngredientModel> categories)
+        public Task InsertOrUpdateIngredients(List<IngredientModel> categories)
         {
-            string sql = @"insert into [dbo].[Ingredient] (Id, Name, ThumbnailUrl) values (@Id, @Name, @ThumbnailUrl)";
+            string sql =
+            @"IF EXISTS(SELECT * FROM [dbo].[Ingredient] WHERE [dbo].[Ingredient].[Id] = @Id)
+                BEGIN
+                    UPDATE[dbo].[Ingredient] SET [Name] = @Name, [ThumbnailUrl]= @ThumbnailUrl
+                    WHERE[Id] = @Id
+                END
+            ELSE
+                BEGIN
+                    INSERT INTO[dbo].[Ingredient] (Id, ThumbnailUrl, Name)
+                    VALUES(@Id, @ThumbnailUrl, @Name)
+                END";
             return _db.SaveData(sql, categories);
         }
     }
