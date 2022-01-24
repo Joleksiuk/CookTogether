@@ -16,6 +16,12 @@ namespace DataAccessLibrary.MealRepositories
             _db = db;
         }
 
+        public Task<AreaModel> GetAreaById(int AreaId)
+        {
+            string sql = @"SELECT * FROM [dbo].[Area] WHERE [Id] = @AreaId";
+            return _db.LoadSingleResult<AreaModel, dynamic>(sql, new { AreaId = AreaId });
+        }
+
         public Task<AreaModel> GetAreaByName(string name)
         {
             string sql = @"select * from [dbo].[Area] where [dbo].[Area].[Name]=@Name";

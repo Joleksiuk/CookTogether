@@ -22,6 +22,12 @@ namespace DataAccessLibrary.MealRepositories
             return _db.LoadData<CategoryModel, dynamic>(sql, new { });
         }
 
+        public Task<CategoryModel> GetCategoryById(int CategoryId)
+        {
+            string sql = @"SELECT * FROM [dbo].[Category] WHERE [Id] = @CategoryId";
+            return _db.LoadSingleResult<CategoryModel, dynamic>(sql, new { CategoryId = CategoryId });
+        }
+
         public Task<CategoryModel> GetCategoryByName(string name)
         {
             string sql = @"select * from [dbo].[Category] where [dbo].[Category].[Name]=@Name";

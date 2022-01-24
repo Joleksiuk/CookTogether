@@ -12,5 +12,6 @@ namespace DataAccessLibrary.MealRepositories
         Task<List<AreaModel>> GetAreas();
         Task<AreaModel> GetAreaByName(string name);
         Task InsertAreasIfNotExists(List<AreaModel> areaModels);
+        Task<AreaModel> GetAreaById(int AreaId);
     }
 }

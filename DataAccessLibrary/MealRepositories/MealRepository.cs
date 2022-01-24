@@ -1,4 +1,5 @@
 ﻿using DataAccessLibrary.Models;
+using DataAccessLibrary.ViewModels;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -20,6 +21,23 @@ namespace DataAccessLibrary.MealRepositories
         {
             string sql = @"select * from [dbo].[Meal]";
             return _db.LoadData<MealModel, dynamic>(sql, new { });
+        }
+
+        public Task<MealModel> GetMealById(int MealId)
+        {
+            string sql = @"SELECT * FROM [dbo].[Meal]
+                           WHERE [Id] = @MealId";
+            return _db.LoadSingleResult<MealModel, dynamic>(sql, new { MealId = MealId });
+        }
+
+        public Task<List<MealIngredientModel>> GetMealIngredientsById(int MealId)
+        {
+            string sql = @"SELECT [Ingredient].[Name], [Ingredient].[ThumbnailUrl], [RecipeIngredient].[Measure]
+                           FROM [dbo].[Ingredient]
+                           INNER JOIN [dbo].[RecipeIngredient]
+                           ON [RecipeIngredient].[MealId] = @MealId
+                           AND [RecipeIngredient].[IngredientId] = [Ingredient].[Id]";
+            return _db.LoadData<MealIngredientModel, dynamic>(sql, new { MealId = MealId });
         }
 
         public Task InsertOrUpdateMealIngredients(List<RecipeIngredientModel> mealIngredients)
