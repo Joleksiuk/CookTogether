@@ -6,11 +6,9 @@ using System.Threading.Tasks;
 
 namespace DataAccessLibrary.Models
 {
-    public class PartyMealChoiceModel
+    public class PartyMealModel
     {
-        public string UserId { get; set; }
         public int PartyId { get; set; }
         public int MealId { get; set; }
-        public bool Picked { get; set; }
     }
 }

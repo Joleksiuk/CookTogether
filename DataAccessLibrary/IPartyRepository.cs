@@ -37,5 +37,8 @@ namespace DataAccessLibrary
         Task RemoveParty(int partyId);
         Task RemoveAllMealChoicesOfParty(int partyId);
 
+        Task InsertPartyMeals(List<PartyMealModel> partyMeals);
+        Task<List<MealModel>> GetPartyMealsById(int partyId);
+        Task<List<PartyMealChoiceModel>> GetUserPartyChoices(int partyId, string userId);
     }
 }
