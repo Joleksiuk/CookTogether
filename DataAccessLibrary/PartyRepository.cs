@@ -161,5 +161,43 @@ namespace DataAccessLibrary
                                 WHERE PartyId = @PartyId )";
             return _db.LoadData<UserModel, dynamic>(sql, new { UserId = userId, PartyId = partyId });
         }
+
+
+
+        public Task RemoveAllCategoriesFromParty(int partyId)
+        {
+            string sql = @"DELETE FROM PartyCategory WHERE PartyId = @PartyId";
+            return _db.SaveData(sql, new { PartyId = partyId});
+        }
+
+        public Task RemoveAllMembersFromParty(int partyId)
+        {
+            string sql = @"DELETE FROM PartyUser WHERE PartyId = @PartyId";
+            return _db.SaveData(sql, new { PartyId = partyId });
+        }
+
+        public Task RemoveAllAreasFromParty(int partyId)
+        {
+            string sql = @"DELETE FROM PartyArea WHERE PartyId = @PartyId";
+            return _db.SaveData(sql, new { PartyId = partyId });
+        }
+
+        public Task RemoveAllInvitesToParty(int partyId)
+        {
+            string sql = @"DELETE FROM PartyUserInvite WHERE PartyId = @PartyId";
+            return _db.SaveData(sql, new { PartyId = partyId });
+        }
+
+        public Task RemoveParty(int partyId)
+        {
+            string sql = @"DELETE FROM Party WHERE Id = @PartyId";
+            return _db.SaveData(sql, new { PartyId = partyId });
+        }
+
+        public Task RemoveAllMealChoicesOfParty(int partyId)
+        {
+            string sql = @"DELETE FROM PartyMealChoice WHERE Id = @PartyId";
+            return _db.SaveData(sql, new { PartyId = partyId });
+        }
     }
 }

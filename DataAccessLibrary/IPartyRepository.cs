@@ -30,5 +30,12 @@ namespace DataAccessLibrary
         Task InsertPartyUser(UserModel user, PartyModel party);
         Task InsertPartyMealChoice(MealModel meal, PartyModel party, UserModel user);
 
+        Task RemoveAllCategoriesFromParty(int partyId);
+        Task RemoveAllMembersFromParty(int partyId);
+        Task RemoveAllAreasFromParty(int partyId);
+        Task RemoveAllInvitesToParty(int partyId);
+        Task RemoveParty(int partyId);
+        Task RemoveAllMealChoicesOfParty(int partyId);
+
     }
 }

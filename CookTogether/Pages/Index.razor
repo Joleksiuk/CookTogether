@@ -1,7 +1,57 @@
 ﻿@page "/"
 
-<h1>Hello, world!</h1>
-
-Welcome to your new app.
+@using System.Linq
 
 
+@using DataAccessLibrary
+@using DataAccessLibrary.Models
+@using DataAccessLibrary.MealRepositories
+
+@inject IMealRepository MealRepository
+@inject ICategoryRepository CategoryRepository
+@inject IAreaRepository AreaRepository
+@inject IIngredientRepository IngredientRepository
+@inject MealRepositories MealRepositories
+
+<h1>CookTogether</h1>
+
+@if (randomMeals == null)
+{
+<div class="d-flex align-items-center">
+    <strong></strong>
+    <div class="spinner-border ms-auto" role="status" aria-hidden="true"></div>
+</div>
+}
+else
+{
+<div class="row g-3">
+
+    @foreach (var meal in randomMeals)
+    {
+        <div>
+            <div class="card" style="width: 18rem;">
+                <img src="@meal.ThumbnailUrl" class="card-img-top">
+                <div class="card-body">
+                    <h5 class="card-title">@meal.Name </h5>
+                    <a href="/Meal/@meal.Id" class="card-link">See more</a>
+                </div>
+            </div>
+        </div>
+    }       
+</div>
+}
+
+@code{
+
+public List<MealModel> mealModels;
+public List<MealModel> randomMeals;
+public Random rand = new Random(DateTime.Now.Millisecond);
+
+protected override async Task OnInitializedAsync()
+{
+    mealModels = await MealRepositories.MealRepository.GetMeals();
+    randomMeals = mealModels.OrderBy(x => rand.Next()).Take(10).ToList<MealModel>();
+    await InvokeAsync(() => StateHasChanged());
+}
+
+}
