@@ -14,8 +14,9 @@
 @attribute [Authorize]
 @if (party == null || partyMembers == null || invitedUsers == null || friendsYouCouldInvite == null)
 {
-    <div class="spinner-border" role="status">
-        <span class="visually-hidden">Loading...</span>
+    <div class="d-flex align-items-center">
+        <strong></strong>
+        <div class="spinner-border ms-auto" role="status" aria-hidden="true"></div>
     </div>
 }
 else
@@ -84,14 +85,6 @@ else
             </table>
         </div>
     </div>
-
-    @if (loggedUserID == party.OwnerUserId)
-    {
-        <br />
-        <button type="button" class="btn btn-danger" @onclick="()=>RemoveRoom()">Remove Party</button>
-        <br />
-    }
-
 }
 
 @code {
@@ -154,11 +147,5 @@ else
     private void InitializeMealPicker()
     {
         NavManager.NavigateTo("/party-room/" + RoomId.ToString() + "/MealPicker/");
-    }
-
-    private void RemoveRoom()
-    {
-        PartyService.RemoveParty(RoomId.Value);
-        NavManager.NavigateTo("/Parties/all");
     }
 }

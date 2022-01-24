@@ -11,7 +11,10 @@
 
 @if (friendableUsers == null || friendlist == null || invitingUsers == null || invitedUsers == null)
 {
-    <p>Loading data...</p>
+    <div class="d-flex align-items-center">
+        <strong></strong>
+        <div class="spinner-border ms-auto" role="status" aria-hidden="true"></div>
+    </div>
 }
 else
 {
