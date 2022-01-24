@@ -1,0 +1,9 @@
+﻿@page "/party-room/{RoomId:int}/MealPicker/"
+
+<h3>MealPicker</h3>
+<h4>This is Meal picker for room @RoomId</h4>
+
+@code {
+    [Parameter]
+    public int? RoomId { get; set; }
+}

@@ -12,6 +12,5 @@ namespace DataAccessLibrary.Models
         public DateTime CreationDate { get; set; }
         public string OwnerUserId { get; set; }
         public string PartyName { get; set; }
-
     }
 }

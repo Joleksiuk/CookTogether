@@ -26,59 +26,56 @@ namespace DataAccessLibrary
 
         public async Task<PartyModel> GetPartyById(string id)
         {
-            string sql = @"SELECT * FROM Party WHERE Id = '" + id + "'";
-            return await _db.LoadSingleResult<PartyModel, dynamic>(sql, new { });
+            string sql = @"SELECT * FROM Party WHERE Id = @PartyId ";
+            return await _db.LoadSingleResult<PartyModel, dynamic>(sql, new { PartyId =id});
         }
         public async Task<PartyModel> GetLatestUserParty(string userID)
         {
-            string sql = @"SELECT TOP 1 * FROM Party WHERE OwnerUserId= '"+userID+"' ORDER BY CreationDate DESC";
-            return await _db.LoadSingleResult<PartyModel, dynamic>(sql, new { });
+            string sql = @"SELECT TOP 1 * FROM Party WHERE OwnerUserId = @UserId ORDER BY CreationDate DESC";
+            return await _db.LoadSingleResult<PartyModel, dynamic>(sql, new { UserId = userID });
         }
 
         public Task<List<PartyModel>> GetUserParties(UserModel user)
         {
-            string sql = @"SELECT * FROM Party WHERE OwnerUserId = '"+ user.Id + "'";
-            return _db.LoadData<PartyModel, dynamic>(sql, new { });
+            string sql = @"SELECT * FROM Party JOIN PartyUser ON PartyUser.PartyId = Party.Id AND UserId = @UserId";
+            return _db.LoadData<PartyModel, dynamic>(sql, new { UserId = user.Id});
         }
 
         public Task InsertParty(PartyModel party)
         {
-            string sql = @"insert into [dbo].[Party] (CreationDate,OwnerUserId,PartyName)
-                            VALUES (@CreationDate, @OwnerUserId, @PartyName)";
+            string sql = @"insert into [dbo].[Party] (CreationDate,OwnerUserId,PartyName) VALUES (@CreationDate, @OwnerUserId, @PartyName)";
             return _db.SaveData(sql, party);
         }
 
         public Task InsertCategoryForParty(CategoryModel category, PartyModel party)
         {
-            string sql = @"insert into [dbo].[PartyCategory] (PartyId,CategoryId)
-                            VALUES ( " +category.Id+ "," + party.Id +" )";
-            return _db.SaveData(sql, party);
+            string sql = @"insert into [dbo].[PartyCategory] (PartyId,CategoryId) VALUES ( @PartyId, @CategoryId )";
+            return _db.SaveData(sql, new { CategoryId = category.Id, PartyId = party.Id});
         }
 
         public Task InsertAreaForParty(AreaModel area, PartyModel party)
         {
-            string sql = @"insert into [dbo].[PartyArea] (PartyId,CategoryId)
-                            VALUES ( " + area.Id + "," + party.Id + " )";
-            return _db.SaveData(sql, party);
+            string sql = @"insert into [dbo].[PartyArea] (PartyId,AreaId) VALUES (  @PartyId, @AreaId )";
+            return _db.SaveData(sql, new { AreaId = area.Id, PartyId = party.Id });
         }
 
         public Task InsertPartyUserInvite(UserModel user, PartyModel party)
         {
-            string sql = @"insert into [dbo].[PartyUserInvite] VALUES ( '"+user.Id+"', "+party.Id+" )";
-            return _db.SaveData(sql, new { user, party });
+            string sql = @"insert into [dbo].[PartyUserInvite] (InvitedUserId, PartyId) VALUES (@UserId , @PartyId )";
+            return _db.SaveData(sql, new { UserId = user.Id, PartyId = party.Id });
         }
 
         public Task InsertPartyUser(UserModel user, PartyModel party)
         {
-            string sql = @"insert into [dbo].[PartyUser] VALUES ( '"+user.Id+"', "+ party.Id+" )";
-            return _db.SaveData(sql, new { user, party});
+            string sql = @"insert into [dbo].[PartyUser] (UserId, PartyId) VALUES ( @UserId, @PartyId )";
+            return _db.SaveData(sql, new { UserId = user.Id, PartyId = party.Id});
         }
 
         public Task InsertPartyMealChoice(MealModel meal, PartyModel party, UserModel user)
         {
             string sql = @"insert into [dbo].[PartyMealChoice] ( UserId, PartyId, MealId )
-                            VALUES ( " + user.Id + "," + party.Id + ","+ meal.Id+" )";
-            return _db.SaveData(sql, party);
+                            VALUES ( @UserId, @PartyId, @MealId )";
+            return _db.SaveData(sql, new { UserId = user.Id , PartyId = party.Id, MealId = meal.Id});
         }
 
         public Task<List<UserModel>> GetAllPartyMembers(PartyModel party, UserModel user)
@@ -140,8 +137,29 @@ namespace DataAccessLibrary
 
         public async Task<PartyUserInviteModel> GetInviteByIds(string userId, int partyId)
         {
-            string sql = @"SELECT * FROM PartyUserInvite WHERE InvitedUserId = '" + userId + "'" + " AND PartyId = "+partyId;
-            return await _db.LoadSingleResult<PartyUserInviteModel, dynamic>(sql, new { });
+            string sql = @"SELECT * FROM PartyUserInvite WHERE InvitedUserId = @UserId AND PartyId = @PartyId";
+            return await _db.LoadSingleResult<PartyUserInviteModel, dynamic>(sql, new { UserId = userId, PartyId = partyId});
+        }
+
+        public Task<List<UserModel>> GetFriendedAndNotMemeberListOfUsers(string userId, int partyId)
+        {
+            string sql = @"SELECT * FROM[dbo].[AspNetUsers] as users
+                            WHERE users.Id <> @UserId AND users.Id IN(
+                                 SELECT[FirstUserID] FROM [dbo].[AspFriendships]
+                                 WHERE [SecondUserID]= @UserId 
+                                 UNION
+                                 SELECT [SecondUserID] FROM[dbo].[AspFriendships]
+                                 WHERE [FirstUserID]= @UserId 
+                            )
+                            AND Id NOT IN(
+                                SELECT InvitedUserId FROM PartyUserInvite
+
+                                WHERE PartyId = @PartyId)
+                            AND Id NOT IN(
+                                SELECT UserId FROM PartyUser
+
+                                WHERE PartyId = @PartyId )";
+            return _db.LoadData<UserModel, dynamic>(sql, new { UserId = userId, PartyId = partyId });
         }
     }
 }
