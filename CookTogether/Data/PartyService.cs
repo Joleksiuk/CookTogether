@@ -46,5 +46,16 @@ namespace CookTogether.Data
         {
             partyRepository.RemovePartyUserInvite(user, party);
         }
+
+        public void RemoveParty(int partyId)
+        {
+            partyRepository.RemoveAllAreasFromParty(partyId);
+            partyRepository.RemoveAllCategoriesFromParty(partyId);
+            partyRepository.RemoveAllInvitesToParty(partyId);
+            partyRepository.RemoveAllMembersFromParty(partyId);
+            partyRepository.RemoveAllMealChoicesOfParty(partyId);
+            partyRepository.RemoveParty(partyId);
+
+        }
     }
 }

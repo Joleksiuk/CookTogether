@@ -21,7 +21,6 @@
 else
 {
     <h3>Welcome to the @party.PartyName Party!</h3>
-
     <hr />
     <br />
     <h3>Party Members : </h3>
@@ -29,23 +28,23 @@ else
         <tbody>
             @foreach (var user in partyMembers)
             {
-            <tr>
-                <td>@user.UserName</td>
-                @if (party.OwnerUserId == loggedUserID && user.Id != party.OwnerUserId)
-                {
-                    <td> <button type="button" class="btn btn-danger" @onclick="() =>RemoveUserFromParty(user)">Remove User from party</button></td>
-                }
-                @if (user.Id == party.OwnerUserId)
-                {
-                    <td>
-                        <span class="badge badge-info">OWNER</span>
-                    </td>
-                }
-                else
-                {
-                    <td> </td>
-                }
-            </tr>
+                <tr>
+                    <td>@user.UserName</td>
+                    @if (party.OwnerUserId == loggedUserID && user.Id != party.OwnerUserId)
+                    {
+                        <td> <button type="button" class="btn btn-danger" @onclick="() =>RemoveUserFromParty(user)">Remove User from party</button></td>
+                    }
+                    @if (user.Id == party.OwnerUserId)
+                    {
+                        <td>
+                            <span class="badge badge-info">OWNER</span>
+                        </td>
+                    }
+                    else
+                    {
+                        <td> </td>
+                    }
+                </tr>
             }
         </tbody>
     </table>
@@ -64,7 +63,7 @@ else
                     {
                         <tr>
                             <td>@user.UserName</td>
-                                <td> <button type="button" class="btn btn-primary" @onclick="() =>InviteUserToParty(user)">Invite User</button></td>
+                            <td> <button type="button" class="btn btn-primary" @onclick="() =>InviteUserToParty(user)">Invite User</button></td>
                         </tr>
                     }
                 </tbody>
@@ -85,6 +84,14 @@ else
             </table>
         </div>
     </div>
+
+    @if (loggedUserID == party.OwnerUserId)
+    {
+        <br />
+        <button type="button" class="btn btn-danger" @onclick="()=>RemoveRoom()">Remove Party</button>
+        <br />
+    }
+
 }
 
 @code {
@@ -147,5 +154,11 @@ else
     private void InitializeMealPicker()
     {
         NavManager.NavigateTo("/party-room/" + RoomId.ToString() + "/MealPicker/");
+    }
+
+    private void RemoveRoom()
+    {
+        PartyService.RemoveParty(RoomId.Value);
+        NavManager.NavigateTo("/Parties/all");
     }
 }
