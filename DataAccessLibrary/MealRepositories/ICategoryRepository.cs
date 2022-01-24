@@ -12,5 +12,6 @@ namespace DataAccessLibrary.MealRepositories
         Task<List<CategoryModel>> GetCategories();
         Task InsertOrUpdateCategories(List<CategoryModel> categories);
         Task<CategoryModel> GetCategoryByName(string name);
+        Task<CategoryModel> GetCategoryById(int CategoryId);
     }
 }
