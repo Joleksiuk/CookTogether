@@ -22,6 +22,8 @@ namespace DataAccessLibrary
         Task<List<PartyUserInviteModel>> GetUserPendingInvites(UserModel user);
         Task<List<DisplayPartyInviteModel>> GetUserPendingDisplayInvites(UserModel user);
 
+        Task<List<UserModel>> GetFriendedAndNotMemeberListOfUsers(string user, int partyId);
+
         Task InsertCategoryForParty(CategoryModel category, PartyModel party);
         Task InsertAreaForParty(AreaModel area, PartyModel party);
         Task InsertPartyUserInvite(UserModel user, PartyModel party);

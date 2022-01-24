@@ -6,10 +6,10 @@ using System.Threading.Tasks;
 
 namespace DataAccessLibrary.Models
 {
-    class PartyMealChoiceModel
+    public class PartyMealChoiceModel
     {
-        string UserId { get; set; }
-        int PartyId { get; set; }
-        int MealId { get; set; }
+        public string UserId { get; set; }
+        public int PartyId { get; set; }
+        public int MealId { get; set; }
     }
 }

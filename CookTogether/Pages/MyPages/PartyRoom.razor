@@ -8,67 +8,83 @@
 
 @inject IUserRepository UserRepository
 @inject IPartyRepository PartyRepository
-@inject PartyService PartyService 
+@inject PartyService PartyService
+@inject NavigationManager NavManager
 
-
-<h3>PartyRoom @RoomId</h3>
-@if (party == null || partyMembers == null || invitedUsers == null || otherUsers == null)
+@attribute [Authorize]
+@if (party == null || partyMembers == null || invitedUsers == null || friendsYouCouldInvite == null)
 {
-    <p>Loading...</p>
+    <div class="spinner-border" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
 }
 else
 {
     <h3>Welcome to the @party.PartyName Party!</h3>
 
+    <hr />
+    <br />
     <h3>Party Members : </h3>
     <table class="table table-striped">
         <tbody>
             @foreach (var user in partyMembers)
             {
-                <tr>
-                    <td>@user.UserName</td>
-                    @if (party.OwnerUserId == loggedUserID && user.Id != party.OwnerUserId)
-                    {
-                        <td> <button type="button" class="btn btn-danger" @onclick="() =>RemoveUserFromParty(user)">Remove User from party</button></td>
-                    }
-
-                </tr>
+            <tr>
+                <td>@user.UserName</td>
+                @if (party.OwnerUserId == loggedUserID && user.Id != party.OwnerUserId)
+                {
+                    <td> <button type="button" class="btn btn-danger" @onclick="() =>RemoveUserFromParty(user)">Remove User from party</button></td>
+                }
+                @if (user.Id == party.OwnerUserId)
+                {
+                    <td>
+                        <span class="badge badge-info">OWNER</span>
+                    </td>
+                }
+                else
+                {
+                    <td> </td>
+                }
+            </tr>
             }
         </tbody>
     </table>
     <hr />
-    <h3>Currently Invited Users : </h3>
-    <table class="table table-striped">
-        <tbody>
-            @foreach (var user in invitedUsers)
-            {
-                <tr>
-                    <td>@user.UserName</td>
-                    @if (party.OwnerUserId == loggedUserID)
-                    {
-                        <td> <button type="button" class="btn btn-dark" @onclick="() =>CancelUserInvitationToParty(user)">Cancel Invitation</button></td>
-                    }
 
-                </tr>
-            }
-        </tbody>
-    </table>
-    <hr />
-    <h3>Friends you you could invite : </h3>
-    <table class="table table-striped">
-        <tbody>
-            @foreach (var user in otherUsers)
-            {
-                <tr>
-                    <td>@user.UserName</td>
-                    @if (party.OwnerUserId == loggedUserID)
+    <br />
+    <button type="button" class="btn btn-success d-flex justify-content-center" @onclick="()=>InitializeMealPicker()">Meal Picker</button>
+    <br />
+
+    <div class="row g-3">
+        <div class="col-md-6">
+            <h3>Friends you you could invite : </h3>
+            <table class="table table-striped">
+                <tbody>
+                    @foreach (var user in friendsYouCouldInvite)
                     {
-                        <td> <button type="button" class="btn btn-primary" @onclick="() =>InviteUserToParty(user)">Invite User</button></td>
+                        <tr>
+                            <td>@user.UserName</td>
+                                <td> <button type="button" class="btn btn-primary" @onclick="() =>InviteUserToParty(user)">Invite User</button></td>
+                        </tr>
                     }
-                </tr>
-            }
-        </tbody>
-    </table>
+                </tbody>
+            </table>
+        </div>
+        <div class="col-md-6">
+            <h3>Currently Invited Users : </h3>
+            <table class="table table-striped">
+                <tbody>
+                    @foreach (var user in invitedUsers)
+                    {
+                        <tr>
+                            <td>@user.UserName</td>
+                            <td> <button type="button" class="btn btn-dark" @onclick="() =>CancelUserInvitationToParty(user)">Cancel Invitation</button></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
 }
 
 @code {
@@ -82,7 +98,7 @@ else
 
     List<UserModel> partyMembers;
     List<UserModel> invitedUsers;
-    List<UserModel> otherUsers;
+    List<UserModel> friendsYouCouldInvite;
 
     PartyModel party;
 
@@ -95,7 +111,7 @@ else
         party = await PartyRepository.GetPartyById(RoomId.ToString());
         partyMembers = await PartyRepository.GetAllPartyMembers(party, loggedUser);
         invitedUsers = await PartyRepository.GetUsersInvitedToParty(party, loggedUser);
-        otherUsers = await PartyRepository.GetNotInvitedNotMembersUsersToParty(party, loggedUser);
+        friendsYouCouldInvite = await PartyRepository.GetFriendedAndNotMemeberListOfUsers(loggedUserID, RoomId.Value);
 
         await InvokeAsync(() => StateHasChanged());
     }
@@ -104,27 +120,32 @@ else
     {
         PartyService.AddUserToParty(user, party);
         partyMembers.Add(user);
-        otherUsers.Remove(user);
+        friendsYouCouldInvite.Remove(user);
     }
 
     private void RemoveUserFromParty(UserModel user)
     {
         PartyService.RemoveUserFromParty(user, party);
         partyMembers.Remove(user);
-        otherUsers.Add(user);
+        friendsYouCouldInvite.Remove(user);
     }
 
     private void InviteUserToParty(UserModel user)
     {
         PartyService.InviteUserToParty(user, party);
         invitedUsers.Add(user);
-        otherUsers.Remove(user);
+        friendsYouCouldInvite.Remove(user);
     }
 
     private void CancelUserInvitationToParty(UserModel user)
     {
         PartyService.CancelUserInvitationToParty(user, party);
         invitedUsers.Remove(user);
-        otherUsers.Add(user);
+        friendsYouCouldInvite.Add(user);
+    }
+
+    private void InitializeMealPicker()
+    {
+        NavManager.NavigateTo("/party-room/" + RoomId.ToString() + "/MealPicker/");
     }
 }

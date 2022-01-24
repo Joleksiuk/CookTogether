@@ -15,41 +15,60 @@
 @inject NavigationManager NavManager
 @inject PartyService PartyService 
 
+@attribute [Authorize]
 <h1>Parties</h1>
 <hr />
 <h3>Create new Party</h3>
 @if (categories == null || areas == null || userParties == null ||pendingInvites==null)
 {
-    <p>Loading...</p>
+    <div class="spinner-border" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+    
 }
 else
 {
-    <div>
-    </div>
-    <div>
+    <div> 
         <EditForm Model="@party" OnValidSubmit="@InsertParty">
+            <br />
             <div>
-                <label>Party Name</label>
+                <label>Party Name :       </label>
                 <InputText @bind-Value="@party.PartyName" placeholder="party name..." />
             </div>
-            <div>
-                <InputSelect @bind-Value="@categoryId" placeholder="category name...">
-                    @foreach (var category in categories)
+            <br />
+            <br />
+            <div style="display:grid; grid-template-columns:3fr 1fr 3fr;">
+                <div>
+                    <h3>Categories choice: </h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; ">
+                        @foreach (var category in categories)
                         {
-                        <option value="@category.Id">@category.Name</option>
+                            <div class="selector">
+                                <input type="checkbox" @onchange="eventArgs => { CategoryCheckboxClicked(category, eventArgs.Value); }" />
+                                <span>@category.Name</span>
+                            </div>
                         }
-                </InputSelect>
-            </div>
-            <div>
-                <InputSelect @bind-Value="AreaId" placeholder="category name...">
-                    @foreach (var area in areas)
+                    </div>
+                </div>
+                <div><br /></div>
+                <div>
+                    <h3>Origin area choice: </h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; ">
+
+                        @foreach (var area in areas)
                         {
-                        <option value="@area.Id">@area.Name</option>
+                            <div class="selector">
+                                <input type="checkbox" @onchange="eventArgs => { AreaCheckboxClicked(area, eventArgs.Value); }" />
+                                <span>@area.Name</span>
+                            </div>
                         }
-                </InputSelect>
+                    </div>
+                </div>
             </div>
             <button type="submit" class="btn btn-primary">Create Party</button>
-        </EditForm>
+</EditForm>
+        <br />
+        <hr />
     </div>
     <div>
         <h2>Parties you are currently in</h2>
@@ -104,7 +123,6 @@ else
 
     int categoryId;
     int AreaId;
-    string partyName;
 
     string roomName;
     UserModel loggedUser;
@@ -144,6 +162,17 @@ else
         PartyModel newPartyModel = await PartyRepository.GetLatestUserParty(loggedUserID);
 
         await PartyRepository.InsertPartyUser(loggedUser, newPartyModel);
+
+        foreach(CategoryModel category in ChosenCategories)
+        {
+            await PartyRepository.InsertCategoryForParty(category, newPartyModel);
+        }
+
+        foreach(AreaModel area in ChosenAreas)
+        {
+            await PartyRepository.InsertAreaForParty(area, newPartyModel);
+        }
+
         NavManager.NavigateTo("/party-room/" + (newPartyModel.Id).ToString());
     }
 
@@ -172,10 +201,32 @@ else
         NavManager.NavigateTo("/party-room/" + partyID.ToString());
     }
 
-    private async Task InitializeNameOfRoom(int partyId)
+    public List<CategoryModel> ChosenCategories = new();
+    public List<AreaModel> ChosenAreas = new();
+
+    void CategoryCheckboxClicked(CategoryModel category, object checkedValue)
     {
-        PartyModel party = await PartyRepository.GetPartyById(partyId.ToString());
-        roomName = party.PartyName;
+        if ((bool)checkedValue)
+        {
+            ChosenCategories.Add(category);
+        }
+        else
+        {
+            ChosenCategories.Remove(category);
+        }
+    }
+
+    void AreaCheckboxClicked(AreaModel area, object checkedValue)
+    {
+        if ((bool)checkedValue)
+        {
+            ChosenAreas.Add(area);
+        }
+        else
+        {
+            ChosenAreas.Remove(area);
+        }
+
     }
 
 }
