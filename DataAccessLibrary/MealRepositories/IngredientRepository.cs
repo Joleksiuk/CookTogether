@@ -34,13 +34,13 @@ namespace DataAccessLibrary.MealRepositories
             string sql =
             @"IF EXISTS(SELECT * FROM [dbo].[Ingredient] WHERE [dbo].[Ingredient].[Id] = @Id)
                 BEGIN
-                    UPDATE[dbo].[Ingredient] SET [Name] = @Name, [ThumbnailUrl]= @ThumbnailUrl
+                    UPDATE[dbo].[Ingredient] SET [Name] = @Name, [ThumbnailSmallUrl]= @ThumbnailSmallUrl
                     WHERE[Id] = @Id
                 END
             ELSE
                 BEGIN
-                    INSERT INTO[dbo].[Ingredient] (Id, ThumbnailUrl, Name)
-                    VALUES(@Id, @ThumbnailUrl, @Name)
+                    INSERT INTO[dbo].[Ingredient] (Id, ThumbnailSmallUrl, Name)
+                    VALUES(@Id, @ThumbnailSmallUrl, @Name)
                 END";
             return _db.SaveData(sql, categories);
         }

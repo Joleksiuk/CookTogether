@@ -69,7 +69,7 @@ namespace CookTogether.Data
                 {
                     Id = int.Parse(ingredient.Id),
                     Name = ingredient.Name,
-                    ThumbnailUrl = ingredient.ThumbnailUrl.ToString()
+                    ThumbnailSmallUrl = (ingredient.ThumbnailSmallUrl != null) ? ingredient.ThumbnailSmallUrl.ToString() : null
                 });
             }
             await repositories.IngredientRepository.InsertOrUpdateIngredients(ingredientModels);

@@ -14,7 +14,7 @@ namespace CookTogether.Models.Api
         public string Name { get; set; }
 
         [JsonIgnore]
-        public Uri ThumbnailUrl { get; set; }
+        public Uri ThumbnailSmallUrl { get; set; }
     }
 
 }

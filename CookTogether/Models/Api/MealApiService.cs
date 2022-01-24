@@ -22,7 +22,7 @@ namespace CookTogether.Models.Api
 
         private static readonly string MEALS_BY_STARTS_WITH_URL_FORMAT = URL_PREFIX + "search.php?f={0}"; //STARTING STRING
 
-        private static readonly string INGREDIENT_THUMBNAIL_URL_FORMAT = "https://www.themealdb.com/images/ingredients/{0}.png"; //INGREDIENT_NAME
+        private static readonly string INGREDIENT_THUMBNAIL_URL_SMALL_FORMAT = "https://www.themealdb.com/images/ingredients/{0}-Small.png"; //INGREDIENT_NAME
 
         private readonly HttpClient httpClient;
 
@@ -88,12 +88,22 @@ namespace CookTogether.Models.Api
                     ingredients = response.Ingredients;
                     foreach(var ingredient in ingredients)
                     {
-                        ingredient.ThumbnailUrl = new Uri(Uri.EscapeUriString(String.Format(INGREDIENT_THUMBNAIL_URL_FORMAT, ingredient.Name)));
+                        Uri thumbnailUrl = new Uri(Uri.EscapeUriString(String.Format(INGREDIENT_THUMBNAIL_URL_SMALL_FORMAT, ingredient.Name)));
+                        if (await ImageExists(thumbnailUrl))
+                        {
+                            ingredient.ThumbnailSmallUrl = thumbnailUrl;
+                        }
                     }
                 }
             }
             catch(HttpRequestException e) { }
             return ingredients;
+        }
+
+        private async Task<bool> ImageExists(Uri imageUri)
+        {
+            var get = await httpClient.GetAsync(imageUri);
+            return get.IsSuccessStatusCode;
         }
 
         public async Task<Meal[]> GetMealsStartingWith(string starting)
