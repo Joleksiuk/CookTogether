@@ -196,7 +196,7 @@ namespace DataAccessLibrary
 
         public Task RemoveAllMealChoicesOfParty(int partyId)
         {
-            string sql = @"DELETE FROM PartyMealChoice WHERE Id = @PartyId";
+            string sql = @"DELETE FROM PartyMealChoice WHERE PartyId = @PartyId";
             return _db.SaveData(sql, new { PartyId = partyId });
         }
 
@@ -221,6 +221,17 @@ namespace DataAccessLibrary
             string sql = @"SELECT * FROM [dbo].[PartyMealChoice]
                            WHERE [PartyId] = @PartyId AND [UserId] = @UserId";
             return _db.LoadData<PartyMealChoiceModel, dynamic>(sql, new { PartyId = partyId, UserId = userId });
+        }
+
+        public Task RemoveAllMealsOfParty(int partyId)
+        {
+            string sql = @"DELETE FROM PartyMeal WHERE PartyId = @PartyId";
+            return _db.SaveData(sql, new { PartyId = partyId });
+        }
+
+        public Task<int> GetNumberOfPartyMembersWhoVoted(int partyId)
+        {
+            throw new NotImplementedException();
         }
     }
 }

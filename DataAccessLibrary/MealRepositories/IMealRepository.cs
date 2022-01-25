@@ -16,5 +16,6 @@ namespace DataAccessLibrary.MealRepositories
         Task InsertOrUpdateMealIngredients(List<RecipeIngredientModel> mealIngredients);
         Task<List<MealIngredientModel>> GetMealIngredientsById(int MealId);
         Task<List<MealModel>> GetMealsByCategoriesAndAreas(List<int> categoryIds, List<int> areaIds);
+        Task<List<MealVotesModel>> GetPartyMealsWithVotingResult(int partyId);
     }
 }

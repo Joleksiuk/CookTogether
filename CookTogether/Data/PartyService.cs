@@ -55,8 +55,8 @@ namespace CookTogether.Data
             partyRepository.RemoveAllInvitesToParty(partyId);
             partyRepository.RemoveAllMembersFromParty(partyId);
             partyRepository.RemoveAllMealChoicesOfParty(partyId);
+            partyRepository.RemoveAllMealsOfParty(partyId);
             partyRepository.RemoveParty(partyId);
-
         }
 
         public async Task<PartyModel> CreateParty(List<CategoryModel> categories, List<AreaModel> areas, string name, string ownerId, DateTime currentDate)

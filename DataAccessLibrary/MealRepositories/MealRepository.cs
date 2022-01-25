@@ -85,5 +85,17 @@ namespace DataAccessLibrary.MealRepositories
                            WHERE [CategoryId] IN @Categories AND [AreaId] IN @Areas";
             return _db.LoadData<MealModel, dynamic>(sql, new { Categories = categoryIds, Areas = areaIds });
         }
+
+        public Task<List<MealVotesModel>> GetPartyMealsWithVotingResult(int partyId)
+        {
+            string sql = @"SELECT m.Id, m.Name,m.ThumbnailUrl, m.CategoryId, m.AreaId, SUM(CAST(pmc.Picked AS INT)) as VoteNumber
+                            ,Count(DISTINCT pmc.UserId) as NumberUsersVoted FROM Meal as m
+                            JOIN PartyMealChoice as pmc on pmc.MealId = m.Id
+                            JOIN PartyMeal as pm on pm.MealId = m.Id
+                            JOIN Party as p on p.Id = pm.PartyId AND p.Id = @PartyId
+                            GROUP BY  m.Id, m.Name,m.ThumbnailUrl, m.CategoryId, m.AreaId
+                            ORDER BY VoteNumber DESC";
+            return _db.LoadData<MealVotesModel, dynamic>(sql, new { PartyId = partyId });
+        }
     }
 }

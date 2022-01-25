@@ -36,10 +36,11 @@ namespace DataAccessLibrary
         Task RemoveAllInvitesToParty(int partyId);
         Task RemoveParty(int partyId);
         Task RemoveAllMealChoicesOfParty(int partyId);
+        Task RemoveAllMealsOfParty(int partyId);
 
         Task InsertPartyMeals(List<PartyMealModel> partyMeals);
         Task<List<MealModel>> GetPartyMealsById(int partyId);
         Task<List<PartyMealChoiceModel>> GetUserPartyChoices(int partyId, string userId);
-
+        Task<int> GetNumberOfPartyMembersWhoVoted(int partyId);
     }
 }
