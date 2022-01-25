@@ -14,9 +14,9 @@ namespace CookTogether.Data
     {
         private readonly MealRepositories mealRepositories;
         private readonly IPartyRepository partyRepository;
-        private readonly IUserRepository userRepository;
 
-        private static readonly int MEALS_PER_PARTY_NUMBER = 20;
+        private static readonly int MIN_MEALS_PER_PARTY_NUMBER = 5;
+        private static readonly int MAX_MEALS_PER_PARTY_NUMBER = 20;
 
         public PartyService(            
                 IPartyRepository partyRepository,
@@ -25,7 +25,6 @@ namespace CookTogether.Data
             )
         {
             this.partyRepository = partyRepository;
-            this.userRepository = userRepository;
             this.mealRepositories = mealRepositories;
         }
 
@@ -110,7 +109,44 @@ namespace CookTogether.Data
             Random rand = new Random(DateTime.Now.Millisecond);
 
             List<MealModel> meals = await mealRepositories.MealRepository.GetMealsByCategoriesAndAreas(categoryIds, areaIds);
-            return meals.OrderBy(x => rand.Next()).Take(MEALS_PER_PARTY_NUMBER).ToList<MealModel>();
+            return meals.OrderBy(x => rand.Next()).Take(MAX_MEALS_PER_PARTY_NUMBER).ToList<MealModel>();
+        }
+
+        public async Task<List<MealModel>> GetPartyMealsForUser(int partyId, string userId)
+        {
+            var mealsTask = partyRepository.GetPartyMealsById(partyId);
+            var choicesTask = partyRepository.GetUserPartyChoices(partyId, userId);
+
+            await Task.WhenAll(mealsTask, choicesTask);
+
+            List<MealModel> meals = mealsTask.Result;
+            List<PartyMealChoiceModel> choices = choicesTask.Result;
+
+            meals.RemoveAll(meal => choices.Any(choice => choice.MealId == meal.Id));
+            return meals;
+        }
+
+        public async Task SaveChoice(int partyId, string userId, int mealId, bool choice)
+        {
+            PartyMealChoiceModel choiceModel = new PartyMealChoiceModel
+            {
+                PartyId = partyId,
+                UserId = userId,
+                MealId = mealId,
+                Picked = choice
+            };
+            await partyRepository.InsertPartyMealChoice(choiceModel);
+        }
+
+        public async Task<bool> CategoriesAndAreasHaveMinNumOfMeals(List<CategoryModel> categories, List<AreaModel> areas)
+        {
+            List<int> categoryIds = new();
+            List<int> areaIds = new();
+            categories.ForEach(category => categoryIds.Add(category.Id));
+            areas.ForEach(area => areaIds.Add(area.Id));
+
+            List<MealModel> meals = await mealRepositories.MealRepository.GetMealsByCategoriesAndAreas(categoryIds, areaIds);
+            return meals.Count >= MIN_MEALS_PER_PARTY_NUMBER;
         }
     }
 }
