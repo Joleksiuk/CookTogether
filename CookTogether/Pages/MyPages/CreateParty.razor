@@ -30,14 +30,14 @@ else
         <EditForm Model="@party" OnValidSubmit="@InsertParty">
             <br />
             <div>
-                <label for="PartyName" class="form-label" >Party Name : </label>
+                <label for="PartyName" class="form-label" >Party Name: </label>
                 <InputText class="form-control" id ="PartyName" @bind-Value="@party.PartyName" placeholder="party name..." />
             </div>
             <br />
             <br />
             <div style="display:grid; grid-template-columns:3fr 1fr 3fr;">
                 <div>
-                    <h3>Categories choice: </h3>
+                    <h3>Categories choice:</h3>
                     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; ">
                         @foreach (var category in categories)
                         {
@@ -50,7 +50,7 @@ else
                 </div>
                 <div><br /></div>
                 <div>
-                    <h3>Origin area choice: </h3>
+                    <h3>Origin area choice:</h3>
                     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; ">
 
                         @foreach (var area in areas)
@@ -116,7 +116,7 @@ else
         System.DateTime currentDate = DateTime.Parse(currentLocalTime);
 
 
-        ValidateInputData(party.PartyName);
+        await ValidateInputData(party.PartyName);
 
         if (letInsertHappen)
         {
@@ -149,8 +149,9 @@ else
         }
     }
 
-    private void ValidateInputData(string partyName)
+    private async Task ValidateInputData(string partyName)
     {
+        var checkMealNumTask = PartyService.CategoriesAndAreasHaveMinNumOfMeals(ChosenCategories, ChosenAreas);
         if (partyName == null || partyName == string.Empty)
         {
             letInsertHappen = false;
@@ -168,6 +169,12 @@ else
             letInsertHappen = false;
             messege = "You have to choose at least one category!";
             messegeType = AlertMessegeType.Error;
+        }
+        if (!(await checkMealNumTask))
+        {
+            letInsertHappen = false;
+            messege = "Please choose more categories or areas.";
+            messegeType = AlertMessegeType.Warning;
         }
     }
 }

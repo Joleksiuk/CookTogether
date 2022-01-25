@@ -71,11 +71,11 @@ namespace DataAccessLibrary
             return _db.SaveData(sql, new { UserId = user.Id, PartyId = party.Id});
         }
 
-        public Task InsertPartyMealChoice(MealModel meal, PartyModel party, UserModel user)
+        public Task InsertPartyMealChoice(PartyMealChoiceModel choiceModel)
         {
-            string sql = @"insert into [dbo].[PartyMealChoice] ( UserId, PartyId, MealId )
-                            VALUES ( @UserId, @PartyId, @MealId )";
-            return _db.SaveData(sql, new { UserId = user.Id , PartyId = party.Id, MealId = meal.Id});
+            string sql = @"insert into [dbo].[PartyMealChoice] ( UserId, PartyId, MealId, Picked )
+                            VALUES ( @UserId, @PartyId, @MealId, @Picked )";
+            return _db.SaveData(sql, choiceModel);
         }
 
         public Task<List<UserModel>> GetAllPartyMembers(PartyModel party, UserModel user)
