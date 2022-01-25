@@ -1,0 +1,190 @@
+﻿@page "/Create-party"
+
+@using DataAccessLibrary
+@using DataAccessLibrary.Models
+@using DataAccessLibrary.MealRepositories
+@using CookTogether.Data
+@using CookTogether.Pages.Components
+
+@inject ICategoryRepository CategoryRepository
+@inject IAreaRepository AreaRepository
+@inject IPartyRepository PartyRepository
+@inject IUserRepository UserRepository
+@inject Blazored.Localisation.Services.IBrowserDateTimeProvider browserDateTimeProvider
+@inject NavigationManager NavManager
+@inject PartyService PartyService
+
+<h3>CreateParty</h3>
+@if (categories == null || areas == null)
+{
+    <div class="d-flex align-items-center">
+        <strong></strong>
+        <div class="spinner-border ms-auto" role="status" aria-hidden="true"></div>
+    </div>
+}
+else
+{
+    <div>
+        <AlertMessege Messege="@messege" MessegeType="@messegeType" />
+
+        <EditForm Model="@party" OnValidSubmit="@InsertParty">
+            <br />
+            <div>
+                <label for="PartyName" class="form-label" >Party Name : </label>
+                <InputText class="form-control" id ="PartyName" @bind-Value="@party.PartyName" placeholder="party name..." />
+            </div>
+            <br />
+            <br />
+            <div style="display:grid; grid-template-columns:3fr 1fr 3fr;">
+                <div>
+                    <h3>Categories choice: </h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; ">
+                        @foreach (var category in categories)
+                        {
+                            <div class="selector">
+                                <input type="checkbox" @onchange="eventArgs => { CategoryCheckboxClicked(category, eventArgs.Value); }" />
+                                <span>@category.Name</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+                <div><br /></div>
+                <div>
+                    <h3>Origin area choice: </h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; ">
+
+                        @foreach (var area in areas)
+                        {
+                            <div class="selector">
+                                <input type="checkbox" @onchange="eventArgs => { AreaCheckboxClicked(area, eventArgs.Value); }" />
+                                <span>@area.Name</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-primary">Create Party</button>
+        </EditForm>
+        <br />
+        <hr />
+    </div>
+}
+
+@code {
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authStateTask { get; set; }
+    private AuthenticationState authenticationState;
+    UserModel loggedUser;
+    private string loggedUserID;
+
+    string messege = string.Empty;
+    AlertMessegeType messegeType = AlertMessegeType.Success;
+    bool letInsertHappen = true;
+
+    PartyModel party { get; set; }
+    string currentLocalTime = "";
+
+    List<CategoryModel> categories;
+    List<AreaModel> areas;
+    public List<CategoryModel> ChosenCategories = new();
+    public List<AreaModel> ChosenAreas = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        party = new PartyModel();
+
+        authenticationState = await authStateTask;
+        loggedUserID = authenticationState.User.Claims.FirstOrDefault().Value;
+        loggedUser = await UserRepository.GetUserById(loggedUserID);
+
+        categories = await CategoryRepository.GetCategories();
+        areas = await AreaRepository.GetAreas();
+
+        await InvokeAsync(() => StateHasChanged());
+    }
+
+    private async Task InsertParty()
+    {
+
+        messege = string.Empty;
+        messegeType = default;
+        letInsertHappen = true;
+
+        var browserDateTime = await browserDateTimeProvider.GetInstance();
+        currentLocalTime = browserDateTime.Now.ToString();
+        System.DateTime currentDate = DateTime.Parse(currentLocalTime);
+        PartyModel partyModel = new PartyModel
+        {
+            CreationDate = currentDate,
+            OwnerUserId = loggedUserID,
+            PartyName = party.PartyName
+        };
+
+        ValidateInputData(party.PartyName);
+
+        if (letInsertHappen)
+        {
+            await PartyRepository.InsertParty(partyModel);
+            PartyModel newPartyModel = await PartyRepository.GetLatestUserParty(loggedUserID);
+            await PartyRepository.InsertPartyUser(loggedUser, newPartyModel);
+
+            foreach (CategoryModel category in ChosenCategories)
+            {
+                await PartyRepository.InsertCategoryForParty(category, newPartyModel);
+            }
+
+            foreach (AreaModel area in ChosenAreas)
+            {
+                await PartyRepository.InsertAreaForParty(area, newPartyModel);
+            }
+            NavManager.NavigateTo("/party-room/" + (newPartyModel.Id).ToString());
+        }
+    }
+
+    void CategoryCheckboxClicked(CategoryModel category, object checkedValue)
+    {
+        if ((bool)checkedValue)
+        {
+            ChosenCategories.Add(category);
+        }
+        else
+        {
+            ChosenCategories.Remove(category);
+        }
+    }
+
+    void AreaCheckboxClicked(AreaModel area, object checkedValue)
+    {
+        if ((bool)checkedValue)
+        {
+            ChosenAreas.Add(area);
+        }
+        else
+        {
+            ChosenAreas.Remove(area);
+        }
+    }
+
+    private void ValidateInputData(string partyName)
+    {
+        if (partyName == null || partyName == string.Empty)
+        {
+            letInsertHappen = false;
+            messege = "Party name can't be empty!";
+            messegeType = AlertMessegeType.Error;
+        }
+        if (ChosenAreas.Count == 0)
+        {
+            letInsertHappen = false;
+            messege = "You have to choose at least one area!";
+            messegeType = AlertMessegeType.Error;
+        }
+        if (ChosenCategories.Count == 0)
+        {
+            letInsertHappen = false;
+            messege = "You have to choose at least one category!";
+            messegeType = AlertMessegeType.Error;
+        }
+    }
+}
