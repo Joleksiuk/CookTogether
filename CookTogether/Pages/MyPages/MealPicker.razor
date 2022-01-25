@@ -10,7 +10,7 @@
 @attribute [Authorize]
 
 
-@if (partyMeals == null || userChoices == null)
+@if (partyMeals == null || userChoices == null || currentMeal==null)
 {
     <div class="d-flex align-items-center">
         <strong>Loading...</strong>

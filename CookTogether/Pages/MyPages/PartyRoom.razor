@@ -51,9 +51,14 @@ else
     </table>
     <hr />
 
-    <br />
-    <button type="button" class="btn btn-success d-flex justify-content-center" @onclick="()=>InitializeMealPicker()">Meal Picker</button>
-    <br />
+    <div class="row g-2">
+        <div>
+            <button type="button" class="btn btn-success d-flex justify-content-center m-5" @onclick="()=>InitializeMealPicker()">Meal Picker</button>
+        </div>
+        <div>
+            <button type="button" class="btn btn-info d-flex justify-content-center m-5" @onclick="()=>ShowCurrentResultBoard()">Result Board</button>
+        </div>
+    </div>
 
     <div class="row g-3">
         <div class="col-md-6">
@@ -147,5 +152,10 @@ else
     private void InitializeMealPicker()
     {
         NavManager.NavigateTo("/party-room/" + RoomId.ToString() + "/MealPicker/");
+    }
+
+    private void ShowCurrentResultBoard()
+    {
+        NavManager.NavigateTo("/party-room/" + RoomId.ToString() + "/result-board");
     }
 }
