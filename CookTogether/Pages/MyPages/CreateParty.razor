@@ -114,30 +114,13 @@ else
         var browserDateTime = await browserDateTimeProvider.GetInstance();
         currentLocalTime = browserDateTime.Now.ToString();
         System.DateTime currentDate = DateTime.Parse(currentLocalTime);
-        PartyModel partyModel = new PartyModel
-        {
-            CreationDate = currentDate,
-            OwnerUserId = loggedUserID,
-            PartyName = party.PartyName
-        };
+
 
         ValidateInputData(party.PartyName);
 
         if (letInsertHappen)
         {
-            await PartyRepository.InsertParty(partyModel);
-            PartyModel newPartyModel = await PartyRepository.GetLatestUserParty(loggedUserID);
-            await PartyRepository.InsertPartyUser(loggedUser, newPartyModel);
-
-            foreach (CategoryModel category in ChosenCategories)
-            {
-                await PartyRepository.InsertCategoryForParty(category, newPartyModel);
-            }
-
-            foreach (AreaModel area in ChosenAreas)
-            {
-                await PartyRepository.InsertAreaForParty(area, newPartyModel);
-            }
+            PartyModel newPartyModel = await PartyService.CreateParty(ChosenCategories, ChosenAreas, party.PartyName, loggedUserID, currentDate);
             NavManager.NavigateTo("/party-room/" + (newPartyModel.Id).ToString());
         }
     }

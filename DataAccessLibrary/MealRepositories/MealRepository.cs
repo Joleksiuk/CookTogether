@@ -32,7 +32,7 @@ namespace DataAccessLibrary.MealRepositories
 
         public Task<List<MealIngredientModel>> GetMealIngredientsById(int MealId)
         {
-            string sql = @"SELECT [Ingredient].[Name], [Ingredient].[ThumbnailUrl], [RecipeIngredient].[Measure]
+            string sql = @"SELECT [Ingredient].[Name], [Ingredient].[ThumbnailSmallUrl], [RecipeIngredient].[Measure]
                            FROM [dbo].[Ingredient]
                            INNER JOIN [dbo].[RecipeIngredient]
                            ON [RecipeIngredient].[MealId] = @MealId
@@ -77,6 +77,13 @@ namespace DataAccessLibrary.MealRepositories
                             VALUES (@Id, @Name, @Recipe, @ThumbnailUrl, @CategoryId, @AreaId)
                     END";
             return _db.SaveData(sql, meals);
+        }
+
+        public Task<List<MealModel>> GetMealsByCategoriesAndAreas(List<int> categoryIds, List<int> areaIds)
+        {
+            string sql = @"SELECT * FROM [Meal]
+                           WHERE [CategoryId] IN @Categories AND [AreaId] IN @Areas";
+            return _db.LoadData<MealModel, dynamic>(sql, new { Categories = categoryIds, Areas = areaIds });
         }
     }
 }

@@ -199,5 +199,28 @@ namespace DataAccessLibrary
             string sql = @"DELETE FROM PartyMealChoice WHERE Id = @PartyId";
             return _db.SaveData(sql, new { PartyId = partyId });
         }
+
+        public Task InsertPartyMeals(List<PartyMealModel> partyMeals)
+        {
+            string sql = @"INSERT INTO [dbo].[PartyMeal] (PartyId, MealId)
+                           VALUES (@PartyId, @MealId)";
+            return _db.SaveData(sql, partyMeals);
+        }
+
+        public Task<List<MealModel>> GetPartyMealsById(int partyId)
+        {
+            string sql = @"SELECT * FROM [dbo].[Meal]
+                          INNER JOIN [PartyMeal] 
+                          ON [PartyMeal].[PartyId] = @Id
+                          AND [PartyMeal].[MealId] = [Meal].[Id]";
+            return _db.LoadData<MealModel, dynamic>(sql, new { Id = partyId });
+        }
+
+        public Task<List<PartyMealChoiceModel>> GetUserPartyChoices(int partyId, string userId)
+        {
+            string sql = @"SELECT * FROM [dbo].[PartyMealChoice]
+                           WHERE [PartyId] = @PartyId AND [UserId] = @UserId";
+            return _db.LoadData<PartyMealChoiceModel, dynamic>(sql, new { PartyId = partyId, UserId = userId });
+        }
     }
 }

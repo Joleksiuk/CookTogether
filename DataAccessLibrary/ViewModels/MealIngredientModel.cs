@@ -10,6 +10,6 @@ namespace DataAccessLibrary.ViewModels
     {
         public string Name;
         public string Measure;
-        public string ThumbnailUrl;
+        public string ThumbnailSmallUrl;
     }
 }
