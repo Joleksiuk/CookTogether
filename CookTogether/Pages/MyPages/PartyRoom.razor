@@ -5,6 +5,7 @@
 @using CookTogether.Models
 @using DataAccessLibrary.MealRepositories
 @using CookTogether.Data
+@using CookTogether.Pages.Components
 
 @inject IUserRepository UserRepository
 @inject IPartyRepository PartyRepository
@@ -14,17 +15,20 @@
 @attribute [Authorize]
 @if (party == null || partyMembers == null || invitedUsers == null || friendsYouCouldInvite == null)
 {
-    <div class="d-flex align-items-center">
-        <strong></strong>
-        <div class="spinner-border ms-auto" role="status" aria-hidden="true"></div>
-    </div>
+    <LoadingSpinner></LoadingSpinner>
 }
 else
 {
-    <h3>Welcome to the @party.PartyName Party!</h3>
-    <hr />
-    <br />
-    <h3>Party Members : </h3>
+    <PageTitle Text="@pageTitleText"></PageTitle>
+
+    <div class="mb-3">
+        <ButtonGrid>
+            <button type="button" class="btn btn-outline-success" @onclick="()=>InitializeMealPicker()">Meal picker</button>
+            <button type="button" class="btn btn-outline-info" @onclick="()=>ShowCurrentResultBoard()">Result board</button>
+        </ButtonGrid>
+    </div>
+
+    <PageSubtitle Text="Party members:" />
     <table class="table table-striped">
         <tbody>
             @foreach (var user in partyMembers)
@@ -49,45 +53,43 @@ else
             }
         </tbody>
     </table>
-    <hr />
 
-    <div class="row g-2">
-        <div>
-            <button type="button" class="btn btn-success d-flex justify-content-center m-5" @onclick="()=>InitializeMealPicker()">Meal Picker</button>
-        </div>
-        <div>
-            <button type="button" class="btn btn-info d-flex justify-content-center m-5" @onclick="()=>ShowCurrentResultBoard()">Result Board</button>
-        </div>
-    </div>
-
-    <div class="row g-3">
+    <div class="row g-3 my-3">
         <div class="col-md-6">
-            <h3>Friends you you could invite : </h3>
+            <PageSubtitle Text="Friends" />
             <table class="table table-striped">
                 <tbody>
                     @foreach (var user in friendsYouCouldInvite)
                     {
                         <tr>
-                            <td>@user.UserName</td>
-                            <td> <button type="button" class="btn btn-primary" @onclick="() =>InviteUserToParty(user)">Invite User</button></td>
+                            <td class="w-50">@user.UserName</td>
+                            <td class="w-50"> <button type="button" class="btn btn-outline-primary" @onclick="() =>InviteUserToParty(user)">Invite</button></td>
                         </tr>
                     }
                 </tbody>
             </table>
         </div>
+
         <div class="col-md-6">
-            <h3>Currently Invited Users : </h3>
-            <table class="table table-striped">
-                <tbody>
-                    @foreach (var user in invitedUsers)
-                    {
-                        <tr>
-                            <td>@user.UserName</td>
-                            <td> <button type="button" class="btn btn-dark" @onclick="() =>CancelUserInvitationToParty(user)">Cancel Invitation</button></td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+            @if (invitedUsers.Any())
+            {
+                <PageSubtitle Text="Invited" />
+
+                <table class="table table-striped">
+                    <tbody>
+                        @foreach (var user in invitedUsers)
+                        {
+                            <tr>
+                                <td class="w-50">@user.UserName</td>
+                                <td class="w-50">
+                                    <button type="button" class="btn btn-dark" @onclick="() =>CancelUserInvitationToParty(user)">Cancel</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+
         </div>
     </div>
 }
@@ -105,6 +107,8 @@ else
     List<UserModel> invitedUsers;
     List<UserModel> friendsYouCouldInvite;
 
+    string pageTitleText;
+
     PartyModel party;
 
     protected override async Task OnInitializedAsync()
@@ -117,6 +121,7 @@ else
         partyMembers = await PartyRepository.GetAllPartyMembers(party, loggedUser);
         invitedUsers = await PartyRepository.GetUsersInvitedToParty(party, loggedUser);
         friendsYouCouldInvite = await PartyRepository.GetFriendedAndNotMemeberListOfUsers(loggedUserID, RoomId.Value);
+        pageTitleText = $"Welcome to the {party.PartyName} party!";
 
         await InvokeAsync(() => StateHasChanged());
     }

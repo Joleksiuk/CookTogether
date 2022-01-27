@@ -4,37 +4,33 @@
 @using DataAccessLibrary.Models
 @using CookTogether.Models
 @using CookTogether.Models.Display
+@using CookTogether.Pages.Components
 
 @inject IUserRepository UserRepository
 @inject IFriendshipsRepository FriendshipRepository
 @attribute [Authorize]
 
+<PageTitle Text="Friends"></PageTitle>
 @if (friendableUsers == null || friendlist == null || invitingUsers == null || invitedUsers == null)
 {
-    <div class="d-flex align-items-center">
-        <strong></strong>
-        <div class="spinner-border ms-auto" role="status" aria-hidden="true"></div>
-    </div>
+    <LoadingSpinner/>
 }
 else
 {
-    <h2>Friends</h2>
     @if (friendlist.Any())
     {
-        <h4>Your Friendlist</h4>
+        <PageSubtitle Text="Your friendlist" />
         <table class="table table-striped">
-            <thread>
-                <tr>
-                    <th scope="col">Friend name</th>
-                    <th scope="col"></th>
-                </tr>
-            </thread>
             <tbody>
                 @foreach (var friend in friendlist)
                 {
                     <tr>
-                        <td>@friend.UserName</td>
-                        <td> <button class="btn btn-danger" @onclick="() => removeFriend(friend)">Remove friend</button></td>
+                        <td class="w-50">@friend.UserName</td>
+                        <td class="w-50">
+                            <ButtonGrid>
+                                <button class="btn btn-outline-danger button-sm" @onclick="() => removeFriend(friend)">Remove</button>
+                            </ButtonGrid>
+                        </td>
                     </tr>
                 }
             </tbody>
@@ -44,21 +40,19 @@ else
 
     @if (invitingUsers.Any())
     {
-        <h4>Received friend invites</h4>
+        <PageSubtitle Text="Received friend invites"/>
         <table class="table table-striped">
-            <thread>
-                <tr>
-                    <th scope="col">Username</th>
-                    <th scope="col"></th>
-                </tr>
-            </thread>
             <tbody>
                 @foreach (var user in invitingUsers)
                 {
                     <tr>
-                        <td>@user.UserName</td>
-                        <td> <button class="btn btn-success" @onclick="() => acceptInvite(user)">Accept invite</button></td>
-                        <td> <button class="btn btn-danger" @onclick="() => ignoreInvite(user)">Ignore invite</button></td>
+                        <td class="w-50">@user.UserName</td>
+                        <td class="w-50">
+                            <ButtonGrid>
+                                <button class="btn btn-outline-success button-sm" @onclick="() => acceptInvite(user)">Accept</button>
+                                <button class="btn btn-outline-danger button-sm" @onclick="() => ignoreInvite(user)">Ignore</button>
+                            </ButtonGrid>
+                        </td>
                     </tr>
                 }
             </tbody>
@@ -67,7 +61,7 @@ else
 
     @if (invitedUsers.Any())
     {
-        <h4>Sent friend invites</h4>
+        <PageSubtitle Text="Sent friend invites"/>
         <table class="table table-striped">
             <thread>
                 <tr>
@@ -79,45 +73,52 @@ else
                 @foreach (var user in invitedUsers)
                 {
                     <tr>
-                        <td>@user.UserName</td>
-                        <td> <button class="btn btn-dark" @onclick="() => cancelInvite(user)">Cancel invitation</button></td>
+                        <td class="w-50">@user.UserName</td>
+                        <td class="w-50">
+                            <ButtonGrid>                      
+                                <button class="btn btn-outline-danger" @onclick="() => cancelInvite(user)">Cancel</button>
+                            </ButtonGrid>
+                        </td>
                     </tr>
                 }
             </tbody>
         </table>
     }
 
-    <div>
-        <h4>Available users</h4>
-        <EditForm Model="@userSearchModel" OnValidSubmit="@handleSearchSubmit">
-            <div class="row my-2">
-                <div class="col">
-                    <InputText id="search" placeholder="Username" class="form-control" @bind-Value="userSearchModel.UserName"></InputText>
-                </div>
-                <div class="col">
-                    <button type="submit" class="btn btn-secondary">Search</button>
-                </div>
-            </div>
-        </EditForm>
 
-        <table class="table table-striped">
-            <thread>
+    <PageSubtitle Text="Available users"/>
+    <EditForm Model="@userSearchModel" OnValidSubmit="@handleSearchSubmit">
+        <div class="row my-2">
+            <div class="col">
+                <InputText id="search" placeholder="Username" class="form-control" @bind-Value="userSearchModel.UserName"></InputText>
+            </div>
+            <div class="col">
+                <button type="submit" class="btn btn-secondary">Search</button>
+            </div>
+        </div>
+    </EditForm>
+
+    <table class="table table-striped">
+        <thread>
+            <tr>
+                <th scope="col"></th>
+                <th scope="col"></th>
+            </tr>
+        </thread>
+        <tbody>
+            @foreach (var user in friendableUsers)
+            {
                 <tr>
-                    <th scope="col"></th>
-                    <th scope="col"></th>
+                    <td class="w-50">@user.UserName</td>
+                    <td class="w-50"> 
+                        <ButtonGrid>
+                            <button class="btn btn-outline-primary" @onclick="() => sendInvite(user)">Invite</button>
+                        </ButtonGrid>
+                    </td>
                 </tr>
-            </thread>
-            <tbody>
-                @foreach (var user in friendableUsers)
-                {
-                    <tr>
-                        <td>@user.UserName</td>
-                        <td> <button class="btn btn-primary" @onclick="() => sendInvite(user)">Invite friend</button></td>
-                    </tr>
-                }
-            </tbody>
-        </table>
-    </div>
+            }
+        </tbody>
+    </table>
 }
 
 

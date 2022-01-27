@@ -1,0 +1,33 @@
+﻿<div class="d-flex @justifyClass" style="gap: 10px">
+    @ChildContent
+</div>
+
+@code {
+    private string justifyClass = "justify-content-start";
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    [Parameter]
+    public JustifyContentType? JustifyContent
+    {
+        set 
+        {
+            switch(value)
+            {
+                case JustifyContentType.Start:
+                    justifyClass = "justify-content-start";
+                    break;
+                case JustifyContentType.Center:
+                    justifyClass = "justify-content-center";
+                    break;
+                case JustifyContentType.End:
+                    justifyClass = "justify-content-end";
+                    break;
+
+            }
+        }
+    }
+
+
+}

@@ -2,35 +2,22 @@
 
 @using DataAccessLibrary.MealRepositories
 @using DataAccessLibrary.Models
-@using DataAccessLibrary.ViewModels 
+@using DataAccessLibrary.ViewModels
+
+@using CookTogether.Pages.Components
 
 @inject MealRepositories mealRepositories
 
-@if (meal == null || mealArea == null || mealCategory == null || ingredients == null)
+
+<MealCard MealId="@MealId.Value"></MealCard>
+@if (isLoading)
 {
-    <div class="d-flex align-items-center">
-        <strong>Loading...</strong>
-        <div class="spinner-border ms-auto" role="status" aria-hidden="true"></div>
-    </div>
+    <LoadingSpinner />
 }
 else
 {
-    <div class="container">
-        <div class="row">
-            <div class="col">
-                <h2>
-                    @meal.Name
-                </h2>
-                <p class="h5">Area: @mealArea.Name</p>
-                <p class="h5">Category: @mealCategory.Name</p>
-            </div>
-            <div class="col">
-                <img src="@meal.ThumbnailUrl" class="img-fluid rounded" alt="Image of @meal.Name" />
-            </div>
-        </div>
-    </div>
-    <div class="container">
-        <h4>Ingredients:</h4>
+    <section class="my-3">
+        <PageSubtitle Text="Ingredients" />
         <ul class="list-group my-2">
 
             @foreach (var ingredient in ingredients)
@@ -38,31 +25,30 @@ else
                 <li class="list-group-item">@ingredient.Measure of @ingredient.Name</li>
             }
         </ul>
-        <div class="my-2">
-
-            <h4>Recipe:</h4>
-            <p>@meal.Recipe</p>
-        </div>
-    </div>
+    </section>
+    <section class="my-3">
+        <PageSubtitle Text="Recipe" />
+        <p>@meal.Recipe</p>
+    </section>
 }
+
+
 
 
 @code {
     [Parameter]
     public int? MealId { get; set; }
 
-    protected MealModel meal;
-    protected AreaModel mealArea;
-    protected CategoryModel mealCategory;
     protected List<MealIngredientModel> ingredients;
+    protected MealModel meal;
 
+    private bool isLoading = true;
 
 
     protected override async Task OnInitializedAsync()
     {
         meal = await mealRepositories.MealRepository.GetMealById(MealId.Value);
         ingredients = await mealRepositories.MealRepository.GetMealIngredientsById(MealId.Value);
-        mealArea = await mealRepositories.AreaRepository.GetAreaById(meal.AreaId);
-        mealCategory = await mealRepositories.CategoryRepository.GetCategoryById(meal.CategoryId);
+        isLoading = false;
     }
 }

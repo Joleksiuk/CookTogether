@@ -3,6 +3,7 @@
 @using DataAccessLibrary
 @using DataAccessLibrary.Models
 @using DataAccessLibrary.MealRepositories
+@using CookTogether.Pages.Components
 
 @inject MealRepositories mealRepositories
 @inject IPartyRepository partyRepository
@@ -10,29 +11,20 @@
 @attribute [Authorize]
 
 
-@if (partyMeals == null || userChoices == null || currentMeal==null)
+<PageTitle Text="Meal picker" />
+@if (isLoading)
 {
-    <div class="d-flex align-items-center">
-        <strong>Loading...</strong>
-        <div class="spinner-border ms-auto" role="status" aria-hidden="true"></div>
-    </div>
+    <LoadingSpinner></LoadingSpinner>
 }
 else
 {
-    <h2>Would you like to try that meal?</h2>
-    <div>
-        <div class="col">
-            <h4>@currentMeal.Name</h4>
-            <div class="row d-flex justify-content-center">
-                <img src="@currentMeal.ThumbnailUrl" class="img-fluid" />
-            </div>
-            <div class="row d-flex justify-content-center my-2">
-                <button class="btn btn-success mx-2" @onclick="AcceptMeal">Yes</button>
-                <button class="btn btn-danger mx-2" @onclick="RejectMeal">No</button>
-            </div>
-        </div>
-    </div>
-
+    <MealCard MealId="@currentMeal.Id">
+        <p>Would you like to try that meal?</p>
+        <ButtonGrid JustifyContent="@buttonJustifyType">
+            <button class="btn btn-success" @onclick="AcceptMeal">Yes</button>
+            <button class="btn btn-danger" @onclick="RejectMeal">No</button>
+        </ButtonGrid>
+    </MealCard>
 }
 
 
@@ -51,6 +43,10 @@ else
     List<PartyMealChoiceModel> userChoices;
     string userId;
 
+    bool isLoading = true;
+
+    JustifyContentType buttonJustifyType = JustifyContentType.Center;
+
     protected override async Task OnInitializedAsync()
     {
         var authenticationState = await authStateTask;
@@ -59,7 +55,7 @@ else
         partyMeals = await partyRepository.GetPartyMealsById(RoomId.Value);
         userChoices = await partyRepository.GetUserPartyChoices(RoomId.Value, userId);
         NextMeal();
-
+        isLoading = false;
     }
 
     private bool NextMeal()

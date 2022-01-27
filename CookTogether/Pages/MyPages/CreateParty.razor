@@ -14,13 +14,10 @@
 @inject NavigationManager NavManager
 @inject PartyService PartyService
 
-<h3>CreateParty</h3>
+<PageTitle Text="Create party"></PageTitle>
 @if (categories == null || areas == null)
 {
-    <div class="d-flex align-items-center">
-        <strong></strong>
-        <div class="spinner-border ms-auto" role="status" aria-hidden="true"></div>
-    </div>
+    <LoadingSpinner/>
 }
 else
 {
@@ -28,45 +25,42 @@ else
         <AlertMessege Messege="@messege" MessegeType="@messegeType" />
 
         <EditForm Model="@party" OnValidSubmit="@InsertParty">
-            <br />
-            <div>
-                <label for="PartyName" class="form-label" >Party Name : </label>
-                <InputText class="form-control" id ="PartyName" @bind-Value="@party.PartyName" placeholder="party name..." />
+            <div class="mb-3">
+                <label for="PartyName" class="form-label" >Party name:</label>
+                <InputText class="form-control" id ="PartyName" @bind-Value="@party.PartyName" placeholder="Name" />
             </div>
-            <br />
-            <br />
-            <div style="display:grid; grid-template-columns:3fr 1fr 3fr;">
-                <div>
-                    <h3>Categories choice: </h3>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; ">
+            <div class="row mb-3">
+                <div class="col">
+                    <label for="categories-check">Meal category choice: </label>
+                    <div id="categories-check" style="display: grid; grid-template-columns: 1fr 1fr 1fr; ">
                         @foreach (var category in categories)
                         {
-                            <div class="selector">
-                                <input type="checkbox" @onchange="eventArgs => { CategoryCheckboxClicked(category, eventArgs.Value); }" />
-                                <span>@category.Name</span>
-                            </div>
+                        <div class="form-check">
+                            <input id="@category.Id" type="checkbox" class="form-check-input" @onchange="eventArgs => CategoryCheckboxClicked(category, eventArgs.Value)" />
+                            <label for="@category.Id" class="form-check-label">@category.Name</label>
+                        </div>
                         }
                     </div>
                 </div>
-                <div><br /></div>
-                <div>
-                    <h3>Origin area choice: </h3>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; ">
+                <div class="col">
+                    <label for="areas-check">Meal origin area choice: </label>
+                    <div id="areas-check" style="display: grid; grid-template-columns: 1fr 1fr 1fr; ">
 
                         @foreach (var area in areas)
                         {
-                            <div class="selector">
-                                <input type="checkbox" @onchange="eventArgs => { AreaCheckboxClicked(area, eventArgs.Value); }" />
-                                <span>@area.Name</span>
-                            </div>
+                        <div class="form-check">
+                            <input id="@area.Id" type="checkbox" class="form-check-input" @onchange="eventArgs => AreaCheckboxClicked(area, eventArgs.Value)" />
+                            <label for="@area.Id" class="form-check-label">@area.Name</label>
+                        </div>
                         }
                     </div>
                 </div>
             </div>
-            <button type="submit" class="btn btn-primary">Create Party</button>
+            <div class="d-flex justify-content-center my-4">        
+                <button type="submit" class="btn btn-outline-success">Create</button>
+            </div>
+
         </EditForm>
-        <br />
-        <hr />
     </div>
 }
 

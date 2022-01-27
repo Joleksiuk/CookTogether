@@ -1,0 +1,62 @@
+﻿@using DataAccessLibrary.Models
+@using DataAccessLibrary.MealRepositories
+
+@inject MealRepositories mealRepositories 
+
+<div class="card">
+    @if (isLoading)
+    {
+        <LoadingSpinner></LoadingSpinner>
+    }
+    else
+    {
+        <div class="card-header">
+            <h1 class="card-title">@meal.Name</h1>
+        </div>
+        <div class="row">
+            <div class="col d-flex flex-column">
+                <div class="card-body d-flex flex-column align-self-stretch">
+                    <div class="my-auto">
+                        <p class="h2 font-weight-light mb-3">Category: <span class="badge badge-secondary">@category.Name</span></p>
+                        <p class="h2 font-weight-light">Area: <span class="badge badge-secondary">@area.Name</span></p>
+                    </div>
+                    @if(ChildContent != null)
+                    { 
+                        <div class="my-auto">
+                            @ChildContent
+                        </div>
+                    }
+                </div>
+            </div>
+            <div class="col">
+                <img src="@meal.ThumbnailUrl" class="card-img-bottom img-fluid rounded" alt="Image of @meal.Name" />
+            </div>
+        </div>
+    }
+
+</div>
+
+@code {
+    [Parameter]
+    public int MealId { set; get; }
+
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    private MealModel meal;
+    private AreaModel area;
+    private CategoryModel category;
+    private bool isLoading = true;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isLoading = true;
+        meal = await mealRepositories.MealRepository.GetMealById(MealId);
+        area = await mealRepositories.AreaRepository.GetAreaById(meal.AreaId);
+        category = await mealRepositories.CategoryRepository.GetCategoryById(meal.CategoryId);
+        isLoading = false;
+
+        await base.OnParametersSetAsync();
+    }
+
+}
