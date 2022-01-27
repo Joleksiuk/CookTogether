@@ -25,6 +25,7 @@ else
         <AlertMessege Messege="@messege" MessegeType="@messegeType" />
 
         <EditForm Model="@party" OnValidSubmit="@InsertParty">
+
             <div class="mb-3">
                 <label for="PartyName" class="form-label" >Party name:</label>
                 <InputText class="form-control" id ="PartyName" @bind-Value="@party.PartyName" placeholder="Name" />
@@ -42,10 +43,10 @@ else
                         }
                     </div>
                 </div>
+
                 <div class="col">
                     <label for="areas-check">Meal origin area choice: </label>
                     <div id="areas-check" style="display: grid; grid-template-columns: 1fr 1fr 1fr; ">
-
                         @foreach (var area in areas)
                         {
                         <div class="form-check">
@@ -110,7 +111,7 @@ else
         System.DateTime currentDate = DateTime.Parse(currentLocalTime);
 
 
-        ValidateInputData(party.PartyName);
+        await ValidateInputData(party.PartyName);
 
         if (letInsertHappen)
         {
@@ -143,8 +144,9 @@ else
         }
     }
 
-    private void ValidateInputData(string partyName)
+    private async Task ValidateInputData(string partyName)
     {
+        var checkMealNumTask = PartyService.CategoriesAndAreasHaveMinNumOfMeals(ChosenCategories, ChosenAreas);
         if (partyName == null || partyName == string.Empty)
         {
             letInsertHappen = false;
@@ -162,6 +164,12 @@ else
             letInsertHappen = false;
             messege = "You have to choose at least one category!";
             messegeType = AlertMessegeType.Error;
+        }
+        if (!(await checkMealNumTask))
+        {
+            letInsertHappen = false;
+            messege = "Please choose more categories or areas.";
+            messegeType = AlertMessegeType.Warning;
         }
     }
 }

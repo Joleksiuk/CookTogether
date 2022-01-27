@@ -1,14 +1,17 @@
 ﻿@page "/party-room/{RoomId:int}/MealPicker/"
 
+@using CookTogether.Data
 @using DataAccessLibrary
 @using DataAccessLibrary.Models
 @using DataAccessLibrary.MealRepositories
 @using CookTogether.Pages.Components
 
 @inject MealRepositories mealRepositories
-@inject IPartyRepository partyRepository
+@inject PartyService partyService
+@inject NavigationManager navigationManager
 
 @attribute [Authorize]
+
 
 
 <PageTitle Text="Meal picker" />
@@ -27,9 +30,6 @@ else
     </MealCard>
 }
 
-
-
-
 @code {
     [Parameter]
     public int? RoomId { get; set; }
@@ -40,7 +40,6 @@ else
     List<MealModel> partyMeals;
 
     MealModel currentMeal;
-    List<PartyMealChoiceModel> userChoices;
     string userId;
 
     bool isLoading = true;
@@ -51,11 +50,37 @@ else
     {
         var authenticationState = await authStateTask;
         userId = authenticationState.User.Claims.FirstOrDefault().Value;
-
-        partyMeals = await partyRepository.GetPartyMealsById(RoomId.Value);
-        userChoices = await partyRepository.GetUserPartyChoices(RoomId.Value, userId);
-        NextMeal();
+      
+        partyMeals = await partyService.GetPartyMealsForUser(RoomId.Value, userId);
+        NextMealOrRedirect();
         isLoading = false;
+    }
+
+    protected async Task AcceptMeal()
+    {
+        await MakeChoice(true);
+    }
+
+    protected async Task RejectMeal()
+    {
+        await MakeChoice(false);
+    }
+
+    protected async Task MakeChoice(bool choice)
+    {
+        int mealId = currentMeal.Id;
+
+        await partyService.SaveChoice(RoomId.Value, userId, mealId, choice);
+        NextMealOrRedirect();
+
+    }
+
+    protected void NextMealOrRedirect()
+    {
+        if (!NextMeal())
+        {
+            navigationManager.NavigateTo($"/party-room/{RoomId.Value}/result-board");
+        }
     }
 
     private bool NextMeal()
@@ -69,15 +94,5 @@ else
         partyMeals.Remove(currentMeal);
         StateHasChanged();
         return true;
-    }
-
-    protected void AcceptMeal()
-    {
-        NextMeal();
-    }
-
-    protected void RejectMeal()
-    {
-        NextMeal();
     }
 }

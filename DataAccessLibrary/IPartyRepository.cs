@@ -28,7 +28,7 @@ namespace DataAccessLibrary
         Task InsertAreaForParty(AreaModel area, PartyModel party);
         Task InsertPartyUserInvite(UserModel user, PartyModel party);
         Task InsertPartyUser(UserModel user, PartyModel party);
-        Task InsertPartyMealChoice(MealModel meal, PartyModel party, UserModel user);
+        Task InsertPartyMealChoice(PartyMealChoiceModel choiceModel);
 
         Task RemoveAllCategoriesFromParty(int partyId);
         Task RemoveAllMembersFromParty(int partyId);
@@ -41,7 +41,6 @@ namespace DataAccessLibrary
         Task InsertPartyMeals(List<PartyMealModel> partyMeals);
         Task<List<MealModel>> GetPartyMealsById(int partyId);
         Task<List<PartyMealChoiceModel>> GetUserPartyChoices(int partyId, string userId);
-
         Task<int> GetNumberOfPartyMembersWhoVoted(int partyId);
     }
 }
