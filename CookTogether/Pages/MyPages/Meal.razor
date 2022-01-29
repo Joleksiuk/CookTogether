@@ -9,13 +9,13 @@
 @inject MealRepositories mealRepositories
 
 
-<MealCard MealId="@MealId.Value"></MealCard>
 @if (isLoading)
 {
     <LoadingSpinner />
 }
 else
 {
+    <MealCard Meal="@meal"></MealCard>
     <section class="my-3">
         <PageSubtitle Text="Ingredients" />
         <ul class="list-group my-2">

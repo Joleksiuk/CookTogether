@@ -22,7 +22,7 @@
 else
 {
     <div>
-        <AlertMessege Messege="@messege" MessegeType="@messegeType" />
+        <AlertMessage Message="@messege" MessageType="@messegeType" />
 
         <EditForm Model="@party" OnValidSubmit="@InsertParty">
 
@@ -74,7 +74,7 @@ else
     private string loggedUserID;
 
     string messege = string.Empty;
-    AlertMessegeType messegeType = AlertMessegeType.Success;
+    AlertMessageType messegeType = AlertMessageType.Success;
     bool letInsertHappen = true;
 
     PartyModel party { get; set; }
@@ -151,25 +151,25 @@ else
         {
             letInsertHappen = false;
             messege = "Party name can't be empty!";
-            messegeType = AlertMessegeType.Error;
+            messegeType = AlertMessageType.Error;
         }
-        if (ChosenAreas.Count == 0)
+        else if (ChosenAreas.Count == 0)
         {
             letInsertHappen = false;
             messege = "You have to choose at least one area!";
-            messegeType = AlertMessegeType.Error;
+            messegeType = AlertMessageType.Error;
         }
-        if (ChosenCategories.Count == 0)
+        else if (ChosenCategories.Count == 0)
         {
             letInsertHappen = false;
             messege = "You have to choose at least one category!";
-            messegeType = AlertMessegeType.Error;
+            messegeType = AlertMessageType.Error;
         }
-        if (!(await checkMealNumTask))
+        else if (!(await checkMealNumTask))
         {
             letInsertHappen = false;
             messege = "Please choose more categories or areas.";
-            messegeType = AlertMessegeType.Warning;
+            messegeType = AlertMessageType.Warning;
         }
     }
 }

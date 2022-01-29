@@ -28,14 +28,7 @@ else
     @foreach (var meal in randomMeals)
     {
         <div class="col-lg-3 d-flex">
-            <div class="card" style="width: 18rem;">
-
-                <img src="@meal.ThumbnailUrl" class="card-img-top">
-                <div class="card-body">
-                    <h5 class="card-title">@meal.Name </h5>
-                    <a href="/Meal/@meal.Id" class="card-link">See more</a>
-                </div>
-            </div>
+            <MealCardSmall Meal="meal"></MealCardSmall>
         </div>
     }
 </div>
@@ -44,15 +37,16 @@ else
 
 @code{
 
-public List<MealModel> mealModels;
-public List<MealModel> randomMeals;
-public Random rand = new Random(DateTime.Now.Millisecond);
+    public List<MealModel> mealModels;
+    public List<MealModel> randomMeals;
+    public Random rand = new Random(DateTime.Now.Millisecond);
 
-protected override async Task OnInitializedAsync()
-{
-    mealModels = await MealRepositories.MealRepository.GetMeals();
-    randomMeals = mealModels.OrderBy(x => rand.Next()).Take(12).ToList<MealModel>();
-    await InvokeAsync(() => StateHasChanged());
-}
+    protected override async Task OnInitializedAsync()
+    {
+        mealModels = await MealRepositories.MealRepository.GetMeals();
+        randomMeals = mealModels.OrderBy(x => rand.Next()).Take(12).ToList<MealModel>();
+        await InvokeAsync(() => StateHasChanged());
+    }
 
+    public void aa() { while (true) ; }
 }

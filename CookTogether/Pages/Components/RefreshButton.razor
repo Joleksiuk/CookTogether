@@ -1,0 +1,36 @@
+﻿@if (isRefreshing)
+{
+    <button class="@activeButtonClass" type="button" disabled>
+        <span class="spinner-grow spinner-grow-sm" role="status" aria-hidden="true"></span>
+        Refreshing...
+    </button>
+}
+else
+{
+    <button class="@inactiveButtonClass" type="button" @onclick="@handleClick">
+        <span class="oi oi-reload"></span>
+        Refresh
+    </button>
+}
+
+
+
+@code {
+
+    string inactiveButtonClass = "btn btn-outline-primary";
+    string activeButtonClass = "btn btn-primary";
+
+    [Parameter]
+    public EventCallback onclick { get; set; }
+
+    bool isRefreshing = false;
+
+    private async Task handleClick()
+    {
+        isRefreshing = true;
+        await InvokeAsync(StateHasChanged);
+        await onclick.InvokeAsync();
+        isRefreshing = false;
+        await InvokeAsync(StateHasChanged);
+    }
+}

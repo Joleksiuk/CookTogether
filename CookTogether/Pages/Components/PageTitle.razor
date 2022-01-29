@@ -1,8 +1,32 @@
-﻿<h1>@Text</h1>
+﻿<div class="row">
+    <h1>@Text</h1>
+    <div class="col align-self-center">
+        @if (WithButtonGrid)
+        {
+            <ButtonGrid JustifyContent="@gridJustify">
+                @ChildContent
+            </ButtonGrid>
+
+        }
+        else
+        {
+            @ChildContent
+        }
+    </div>
+</div>
+
 <hr />
 
 @code {
+
+    JustifyContentType gridJustify = JustifyContentType.End;
+
     [Parameter]
     public string Text { get; set; }
 
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+    [Parameter]
+    public bool WithButtonGrid { get; set; }
 }

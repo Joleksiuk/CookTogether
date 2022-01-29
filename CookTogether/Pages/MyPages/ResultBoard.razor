@@ -9,7 +9,27 @@
 @inject MealRepositories MealRepositories
 @inject IMealRepository MealRepository
 
-<PageTitle Text="Party results"></PageTitle>
+<style>
+    .top-1 {
+        background-color: gold;
+        color: #665a00;
+    }
+
+    .top-2 {
+        background-color: silver;
+        color: #4e4e4e;
+    }
+
+    .top-3 {
+        background-color: saddlebrown;
+        color: #f5cca3;
+    }
+</style>
+
+
+<PageTitle Text="Party results" WithButtonGrid="true">
+    <RefreshButton onclick="@LoadData"/>
+</PageTitle>
 
 @if (Meals == null)
 {
@@ -17,6 +37,16 @@
 }
 else
 {
+    <div class="row d-flex card-group mb-2">
+        @foreach(var (meal, i) in topMeals.Select((meal, i) => (meal, i + 1)))
+        {
+            <div class="col d-flex">
+                <MealCardSmall Meal="meal">
+                    <h2> <span class="badge w-100 top-@i">#@i</span></h2>
+                </MealCardSmall>
+            </div>
+         }
+    </div>
     <table class="table">
         <thead>
             <tr>
@@ -61,10 +91,35 @@ else
     private List<MealVotesModel> Meals;
     protected int PartyUserNumber;
 
+    private List<MealModel> topMeals;
+
     protected override async Task OnInitializedAsync()
     {
-        Meals = await MealRepository.GetPartyMealsWithVotingResult(RoomId.Value);
+        await LoadData();
         await InvokeAsync(() => StateHasChanged());
+    }
+
+    protected async Task LoadData()
+    {
+        Meals = await MealRepository.GetPartyMealsWithVotingResult(RoomId.Value);
+        topMeals = GetTopThreeMeals(Meals);
+    }
+
+    protected List<MealModel> GetTopThreeMeals(List<MealVotesModel> votes)
+    {
+        List<MealModel> meals = new();
+        foreach(var vote in votes.Take(3))
+        {
+            meals.Add(new MealModel
+            {
+                Id = vote.Id,
+                Name = vote.Name,
+                ThumbnailUrl = vote.ThumbnailUrl,
+                CategoryId = vote.CategoryId,
+                AreaId = vote.AreaId
+            });
+        }
+        return meals;
     }
 
 }

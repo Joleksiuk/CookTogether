@@ -19,15 +19,24 @@
 {
     <LoadingSpinner></LoadingSpinner>
 }
+else if(currentMeal!=null)
+{
+    <MealCard Meal="@currentMeal">
+        <p>Would you like to try that meal?</p>
+        <div class="row">
+            <div class="col">
+                <button class="btn btn-success btn-block" @onclick="AcceptMeal"><span class="oi oi-thumb-up"></span>Yes</button>
+            </div>
+            <div class="col">
+                <button class="btn btn-danger btn-block" @onclick="RejectMeal"><span class="oi oi-thumb-down"></span>No</button>
+            </div>
+        </div>
+    </MealCard>
+}
 else
 {
-    <MealCard MealId="@currentMeal.Id">
-        <p>Would you like to try that meal?</p>
-        <ButtonGrid JustifyContent="@buttonJustifyType">
-            <button class="btn btn-success" @onclick="AcceptMeal">Yes</button>
-            <button class="btn btn-danger" @onclick="RejectMeal">No</button>
-        </ButtonGrid>
-    </MealCard>
+    <AlertMessage Message="Seems like you already have picked your meals..."></AlertMessage>
+    <button class="btn btn-primary btn-block" @onclick="NavigateToPartyRoom">Skip to party results</button> 
 }
 
 @code {
@@ -50,10 +59,11 @@ else
     {
         var authenticationState = await authStateTask;
         userId = authenticationState.User.Claims.FirstOrDefault().Value;
-      
+
         partyMeals = await partyService.GetPartyMealsForUser(RoomId.Value, userId);
-        NextMealOrRedirect();
+        NextMeal();
         isLoading = false;
+        StateHasChanged();
     }
 
     protected async Task AcceptMeal()
@@ -79,8 +89,13 @@ else
     {
         if (!NextMeal())
         {
-            navigationManager.NavigateTo($"/party-room/{RoomId.Value}/result-board");
+            NavigateToPartyRoom();
         }
+    }
+
+    private void NavigateToPartyRoom()
+    {
+        navigationManager.NavigateTo($"/party-room/{RoomId.Value}/result-board");
     }
 
     private bool NextMeal()

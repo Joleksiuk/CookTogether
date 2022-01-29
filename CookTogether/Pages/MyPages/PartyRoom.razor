@@ -19,13 +19,17 @@
 }
 else
 {
-    <PageTitle Text="@pageTitleText"></PageTitle>
+    <PageTitle Text="@pageTitleText" WithButtonGrid="true">
+        <RefreshButton onclick="@LoadData"/>
+    </PageTitle>
 
-    <div class="mb-3">
-        <ButtonGrid>
-            <button type="button" class="btn btn-outline-success" @onclick="()=>InitializeMealPicker()">Meal picker</button>
-            <button type="button" class="btn btn-outline-info" @onclick="()=>ShowCurrentResultBoard()">Result board</button>
-        </ButtonGrid>
+    <div class="mb-3 row">
+        <div class="col">
+            <button type="button" class="btn btn-success btn-block py-3" @onclick="()=>InitializeMealPicker()">Meal picker</button>
+        </div>
+        <div class="col">
+            <button type="button" class="btn btn-info btn-block py-3" @onclick="()=>ShowCurrentResultBoard()">Result board</button>
+        </div>
     </div>
 
     <PageSubtitle Text="Party members:" />
@@ -37,9 +41,9 @@ else
                     <td>@user.UserName</td>
                     @if (party.OwnerUserId == loggedUserID && user.Id != party.OwnerUserId)
                     {
-                        <td> <button type="button" class="btn btn-danger" @onclick="() =>RemoveUserFromParty(user)">Remove User from party</button></td>
+                        <td> <button type="button" class="btn btn-outline-danger" @onclick="() =>RemoveUserFromParty(user)">Kick</button></td>
                     }
-                    @if (user.Id == party.OwnerUserId)
+                    else if (user.Id == party.OwnerUserId)
                     {
                         <td>
                             <span class="badge badge-info">OWNER</span>
@@ -82,7 +86,7 @@ else
                             <tr>
                                 <td class="w-50">@user.UserName</td>
                                 <td class="w-50">
-                                    <button type="button" class="btn btn-dark" @onclick="() =>CancelUserInvitationToParty(user)">Cancel</button>
+                                    <button type="button" class="btn btn-outline-dark" @onclick="() =>CancelUserInvitationToParty(user)">Cancel</button>
                                 </td>
                             </tr>
                         }
@@ -106,6 +110,7 @@ else
     List<UserModel> partyMembers;
     List<UserModel> invitedUsers;
     List<UserModel> friendsYouCouldInvite;
+    UserModel loggedUser;
 
     string pageTitleText;
 
@@ -115,15 +120,21 @@ else
     {
         authenticationState = await authStateTask;
         loggedUserID = authenticationState.User.Claims.FirstOrDefault().Value;
-        UserModel loggedUser = await UserRepository.GetUserById(loggedUserID);
+        loggedUser = await UserRepository.GetUserById(loggedUserID);
 
         party = await PartyRepository.GetPartyById(RoomId.ToString());
-        partyMembers = await PartyRepository.GetAllPartyMembers(party, loggedUser);
-        invitedUsers = await PartyRepository.GetUsersInvitedToParty(party, loggedUser);
-        friendsYouCouldInvite = await PartyRepository.GetFriendedAndNotMemeberListOfUsers(loggedUserID, RoomId.Value);
+        await LoadData();
+
         pageTitleText = $"Welcome to the {party.PartyName} party!";
 
         await InvokeAsync(() => StateHasChanged());
+    }
+
+    private async Task LoadData()
+    {
+        partyMembers = await PartyRepository.GetAllPartyMembers(party, loggedUser);
+        invitedUsers = await PartyRepository.GetUsersInvitedToParty(party, loggedUser);
+        friendsYouCouldInvite = await PartyRepository.GetFriendedAndNotMemeberListOfUsers(loggedUserID, RoomId.Value);
     }
 
     private void AddUserToParty(UserModel user)

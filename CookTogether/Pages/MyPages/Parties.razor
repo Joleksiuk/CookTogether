@@ -17,7 +17,10 @@
 
 @attribute [Authorize]
 
-<PageTitle Text="Parties"></PageTitle>
+<PageTitle Text="Parties" WithButtonGrid="true">
+    <button type="button" class="btn btn-success" @onclick="() => CreateParty()">Create party</button>
+    <RefreshButton onclick="@LoadData"/>
+</PageTitle>
 @if (userParties == null || pendingInvites == null)
 {
     <LoadingSpinner />
@@ -28,9 +31,6 @@ else
     {
         <ModalDialog Title="Are you sure?" Text="@modalPrompt" OnClose="@OnDeletePartyDialogClose"></ModalDialog>
     }
-    <ButtonGrid>
-        <button type="button" class="btn btn-success" @onclick="() => CreateParty()">Create party</button>
-    </ButtonGrid>
       
     <div class="row g-3 my-2">
 
@@ -126,11 +126,16 @@ else
         loggedUserID = authenticationState.User.Claims.FirstOrDefault().Value;
         loggedUser = await UserRepository.GetUserById(loggedUserID);
 
+        await LoadData();
+
+        await InvokeAsync(() => StateHasChanged());
+    }
+
+    protected async Task LoadData()
+    {
         userParties = await PartyRepository.GetUserParties(loggedUser);
         pendingInvites = await PartyRepository.GetUserPendingInvites(loggedUser);
         displayPendingInvites = await PartyRepository.GetUserPendingDisplayInvites(loggedUser);
-
-        await InvokeAsync(() => StateHasChanged());
     }
 
     private async Task AcceptInvitation(UserModel user, int partyId)

@@ -10,7 +10,10 @@
 @inject IFriendshipsRepository FriendshipRepository
 @attribute [Authorize]
 
-<PageTitle Text="Friends"></PageTitle>
+<PageTitle Text="Friends" WithButtonGrid="true">
+    <RefreshButton onclick="@LoadData"/>
+</PageTitle>
+
 @if (friendableUsers == null || friendlist == null || invitingUsers == null || invitedUsers == null)
 {
     <LoadingSpinner/>
@@ -93,7 +96,7 @@ else
                 <InputText id="search" placeholder="Username" class="form-control" @bind-Value="userSearchModel.UserName"></InputText>
             </div>
             <div class="col">
-                <button type="submit" class="btn btn-secondary">Search</button>
+                <button type="submit" class="btn btn-secondary"><span class="oi oi-magnifying-glass"></span>Search</button>
             </div>
         </div>
     </EditForm>
@@ -139,6 +142,8 @@ else
     private List<UserModel> invitingUsers;
     private List<UserModel> invitedUsers;
 
+    private bool isLoading = false;
+
 
     //FRIENDSHIPS
     private List<UserModel> friendlist;
@@ -153,11 +158,17 @@ else
 
         loggedUserID = authenticationState.User.Claims.FirstOrDefault().Value;
         loggedUser = await UserRepository.GetUserById(loggedUserID);
+        await LoadData();
+
+        await InvokeAsync(() => StateHasChanged());
+    }
+
+    private async Task LoadData()
+    {
         friendlist = await FriendshipRepository.GetFriendListOfUser(loggedUserID);
         friendableUsers = await FriendshipRepository.GetNotFriendedAndNotInvitedListOfUser(loggedUserID);
         invitingUsers = await FriendshipRepository.GetInvitingUsersByInvitedUserId(loggedUserID);
         invitedUsers = await FriendshipRepository.GetInvitedUsersByInvitingUserId(loggedUserID);
-        await InvokeAsync(() => StateHasChanged());
     }
 
     private async Task addFriend(UserModel friend)
