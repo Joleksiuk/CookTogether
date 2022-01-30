@@ -16,42 +16,40 @@
 @inject PartyService PartyService
 
 @attribute [Authorize]
-<h1>Parties</h1>
-<hr />
+
+<PageTitle Text="Parties" WithButtonGrid="true">
+    <button type="button" class="btn btn-success" @onclick="() => CreateParty()">Create party</button>
+    <RefreshButton onclick="@LoadData"/>
+</PageTitle>
 @if (userParties == null || pendingInvites == null)
 {
-    <div class="d-flex align-items-center">
-        <strong></strong>
-        <div class="spinner-border ms-auto" role="status" aria-hidden="true"></div>
-    </div>
+    <LoadingSpinner />
 }
 else
 {
-
-
     @if (DeletePartyDialogOpen)
     {
-        <ModalDialog Title="Are you sure?" Text="Do you want to delete this object?" OnClose="@OnDeletePartyDialogClose"></ModalDialog>
+        <ModalDialog Title="Are you sure?" Text="@modalPrompt" OnClose="@OnDeletePartyDialogClose"></ModalDialog>
     }
-
-    <button type="submit" class="btn btn-primary my-5" @onclick="() => CreateParty()">Create Party</button>
-
-    <div class="row g-3">
+      
+    <div class="row g-3 my-2">
 
         <div class="col-md-6">
-            <h2>Parties you are currently in</h2>
             <table class="table table-striped">
                 <tbody>
                     @foreach (var party in userParties)
                     {
                         <tr>
-                            <td>@party.PartyName</td>
-                            <td> <button type="button" class="btn btn-primary" @onclick="() => GoToParty(party.Id)">Go to Party Room</button></td>
-                            <td>
-                                @if (loggedUserID == party.OwnerUserId)
-                                {
-                                    <button type="button" class="btn btn-danger" @onclick="()=>OpenDeletePartyDialog(party)">Remove Party</button>
-                                }
+                            <td class="w-50">@party.PartyName</td>
+                            <td class="w-50">
+                                <ButtonGrid>
+                                    <button type="button" class="btn btn-outline-primary" @onclick="() => GoToParty(party.Id)">Open</button>
+
+                                    @if (loggedUserID == party.OwnerUserId)
+                                    {
+                                        <button type="button" class="btn btn-outline-danger" @onclick="()=>OpenDeletePartyDialog(party)">Remove</button>
+                                    }
+                                </ButtonGrid>
                             </td>
                         </tr>
                     }
@@ -60,22 +58,25 @@ else
         </div>
 
         <div class="col-md-6">
-            <h2>Pending invites</h2>
             <table class="table table-striped">
                 <tbody>
                     @foreach (var invite in displayPendingInvites)
                     {
                         <tr>
-                            <td>@invite.PartyName</td>
-                            <td> <button type="button" class="btn btn-success" @onclick="() => AcceptInvitation(loggedUser, invite.PartyId)">Accept</button></td>
-                            <td> <button type="button" class="btn btn-danger" @onclick="() => DeclineInvitation(loggedUser,invite.PartyId)">Decline</button></td>
+                            <td class="w-50">@invite.PartyName</td>
+                            <td class="w-50">
+                                <ButtonGrid>
+                                    <button type="button" class="btn btn-outline-success" @onclick="() => AcceptInvitation(loggedUser, invite.PartyId)">Accept</button>
+                                    <button type="button" class="btn btn-outline-danger" @onclick="() => DeclineInvitation(loggedUser,invite.PartyId)">Decline</button>
+                                </ButtonGrid>
+                            </td>
                         </tr>
                     }
                 </tbody>
             </table>
         </div>
-
     </div>
+
 }
 
 @code {
@@ -98,6 +99,7 @@ else
     UserModel loggedUser;
 
     PartyModel partyToRemove;
+    string modalPrompt;
 
     private async Task OnDeletePartyDialogClose(bool accepted)
     {
@@ -112,6 +114,7 @@ else
     {
         DeletePartyDialogOpen = true;
         partyToRemove = party;
+        modalPrompt = $"Do you want to remove party {party.PartyName}?";
         StateHasChanged();
     }
 
@@ -123,11 +126,16 @@ else
         loggedUserID = authenticationState.User.Claims.FirstOrDefault().Value;
         loggedUser = await UserRepository.GetUserById(loggedUserID);
 
+        await LoadData();
+
+        await InvokeAsync(() => StateHasChanged());
+    }
+
+    protected async Task LoadData()
+    {
         userParties = await PartyRepository.GetUserParties(loggedUser);
         pendingInvites = await PartyRepository.GetUserPendingInvites(loggedUser);
         displayPendingInvites = await PartyRepository.GetUserPendingDisplayInvites(loggedUser);
-
-        await InvokeAsync(() => StateHasChanged());
     }
 
     private async Task AcceptInvitation(UserModel user, int partyId)

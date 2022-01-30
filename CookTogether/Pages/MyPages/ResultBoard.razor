@@ -4,25 +4,53 @@
 @using DataAccessLibrary.Models
 @using DataAccessLibrary.ViewModels
 
+@using CookTogether.Pages.Components
+
 @inject MealRepositories MealRepositories
 @inject IMealRepository MealRepository
 
-<h3>ResultBoard</h3>
-<hr />
+<style>
+    .top-1 {
+        background-color: gold;
+        color: #665a00;
+    }
+
+    .top-2 {
+        background-color: silver;
+        color: #4e4e4e;
+    }
+
+    .top-3 {
+        background-color: saddlebrown;
+        color: #f5cca3;
+    }
+</style>
+
+
+<PageTitle Text="Party results" WithButtonGrid="true">
+    <RefreshButton onclick="@LoadData"/>
+</PageTitle>
 
 @if (Meals == null)
 {
-    <div class="d-flex align-items-center">
-        <strong></strong>
-        <div class="spinner-border ms-auto" role="status" aria-hidden="true"></div>
-    </div>
+    <LoadingSpinner></LoadingSpinner>
 }
 else
 {
+    <div class="row d-flex card-group mb-2">
+        @foreach(var (meal, i) in topMeals.Select((meal, i) => (meal, i + 1)))
+        {
+            <div class="col d-flex">
+                <MealCardSmall Meal="meal">
+                    <h2> <span class="badge w-100 top-@i">#@i</span></h2>
+                </MealCardSmall>
+            </div>
+         }
+    </div>
     <table class="table">
         <thead>
             <tr>
-                <th scope="col" colspan="1">Nb </th>
+                <th scope="col" colspan="1"># </th>
                 <th scope="col" colspan="1">Image</th>
                 <th scope="col" colspan="1">Name</th>
                 <th scope="col" colspan="3">Result</th>
@@ -44,8 +72,8 @@ else
                     </td>
                     <td style="width: 50%;" colspan="3">
                         <div class="progress">
-                            <div class="progress-bar" role="progressbar" style="width:@((((float)meal.VoteNumber/(float)meal.NumberUsersVoted)*100))%;)"
-                                 aria-valuenow="25" aria-valuemin="0" aria-valuemax="100">@((((float)meal.VoteNumber/(float)meal.NumberUsersVoted)*100))%</div>
+                            <div class="progress-bar" role="progressbar" style="width:@((((float)meal.VoteNumber/(float)meal.NumberUsersVoted)*100))%"
+                                 aria-valuenow="@((((float)meal.VoteNumber/(float)meal.NumberUsersVoted)*100))" aria-valuemin="0" aria-valuemax="100">@((((float)meal.VoteNumber/(float)meal.NumberUsersVoted)*100))%</div>
                         </div>
                     </td>
                     <td colspan="1"> @meal.NumberUsersVoted </td>
@@ -63,10 +91,35 @@ else
     private List<MealVotesModel> Meals;
     protected int PartyUserNumber;
 
+    private List<MealModel> topMeals;
+
     protected override async Task OnInitializedAsync()
     {
-        Meals = await MealRepository.GetPartyMealsWithVotingResult(RoomId.Value);
+        await LoadData();
         await InvokeAsync(() => StateHasChanged());
+    }
+
+    protected async Task LoadData()
+    {
+        Meals = await MealRepository.GetPartyMealsWithVotingResult(RoomId.Value);
+        topMeals = GetTopThreeMeals(Meals);
+    }
+
+    protected List<MealModel> GetTopThreeMeals(List<MealVotesModel> votes)
+    {
+        List<MealModel> meals = new();
+        foreach(var vote in votes.Take(3))
+        {
+            meals.Add(new MealModel
+            {
+                Id = vote.Id,
+                Name = vote.Name,
+                ThumbnailUrl = vote.ThumbnailUrl,
+                CategoryId = vote.CategoryId,
+                AreaId = vote.AreaId
+            });
+        }
+        return meals;
     }
 
 }

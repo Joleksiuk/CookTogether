@@ -1,0 +1,41 @@
+﻿@using CookTogether.Pages.Components
+@if (!string.IsNullOrWhiteSpace(Message))
+{
+<div class="alert @alertClass">@Message</div>
+}
+
+@code {
+    [Parameter]
+    public string Message { get; set; }
+    private AlertMessageType messageType;
+
+    [Parameter]
+    public AlertMessageType MessageType
+    {
+        get => messageType;
+        set
+        {
+            messageType = value;
+            switch (messageType)
+            {
+                case AlertMessageType.Error:
+                    alertClass = "alert-danger";
+                    break;
+                case AlertMessageType.Success:
+                    alertClass = "alert-success";
+                    break;
+                case AlertMessageType.Warning:
+                    alertClass = "alert-warning";
+                    break;
+                default:
+                    break;
+            }
+        }
+    }
+    string alertClass = "alert-info";
+
+    void HideMessage()
+    {
+        Message = string.Empty;
+    }
+}
