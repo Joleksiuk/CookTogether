@@ -7,6 +7,8 @@
 @using DataAccessLibrary.Models
 @using DataAccessLibrary.MealRepositories
 
+@using CookTogether.Pages.Components 
+
 @inject IMealRepository MealRepository
 @inject ICategoryRepository CategoryRepository
 @inject IAreaRepository AreaRepository
@@ -14,33 +16,22 @@
 @inject MealRepositories MealRepositories
 
 
-<h1 class="justify-content-center align-self-center">CookTogether</h1>
+<PageTitle Text="Welcome to Cook Together!"></PageTitle>
 @if (randomMeals == null)
 {
-    <div class="d-flex">
-        <strong></strong>
-        <div class="spinner-border ms-auto" role="status" aria-hidden="true"></div>
-    </div>
+    <LoadingSpinner/>
 }
 else
 {
-    <div class="d-flex">
-
-        <div class="row g-3 align-content-center justify-content-center">
-            @foreach (var meal in randomMeals)
-            {
-                <div>
-                    <div class="card" style="width: 18rem;">
-                        <img src="@meal.ThumbnailUrl" class="card-img-top">
-                        <div class="card-body">
-                            <h5 class="card-title">@meal.Name </h5>
-                            <a href="/Meal/@meal.Id" class="card-link">See more</a>
-                        </div>
-                    </div>
-                </div>
-            }
+<div class="card-group row d-flex">
+    @foreach (var meal in randomMeals)
+    {
+        <div class="col-lg-3 d-flex">
+            <MealCardSmall Meal="meal"></MealCardSmall>
         </div>
-    </div>
+    }
+</div>
+
 }
 @code{
 
@@ -51,8 +42,9 @@ else
     protected override async Task OnInitializedAsync()
     {
         mealModels = await MealRepositories.MealRepository.GetMeals();
-        randomMeals = mealModels.OrderBy(x => rand.Next()).Take(10).ToList<MealModel>();
+        randomMeals = mealModels.OrderBy(x => rand.Next()).Take(12).ToList<MealModel>();
         await InvokeAsync(() => StateHasChanged());
     }
 
+    public void aa() { while (true) ; }
 }

@@ -53,7 +53,7 @@ namespace DataAccessLibrary
                                 SELECT [InvitedUserId]
                                 FROM [FriendInvite]
                                 WHERE [InvitingUserId] = @UserId)";
-            if (UserName.Length > 0)
+            if (UserName?.Length > 0)
             {
                 sql += "AND users.UserName LIKE @UserNameLike";
                  return _db.LoadData<UserModel, dynamic>(sql, new { UserId = Id, UserNameLike = "%" + UserName + "%" });

@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace CookTogether.Pages.Components
 {
-    public enum AlertMessegeType
+    public enum AlertMessageType
     {
         Error, Warning, Success
     }
