@@ -42,9 +42,36 @@ a, .btn-link {
     z-index: 1000;
 }
 
-    #blazor-error-ui .dismiss {
-        cursor: pointer;
-        position: absolute;
-        right: 0.75rem;
-        top: 0.5rem;
-    }
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}
+
+
+
+#mynavbar {
+    background-image: url("https://i.postimg.cc/4Nds6XPr/1702-m10-i304-n005-F-c06-551922376-White-doodle-vegetables-and-fruits-isolated-on-blackboard-seamles.jpg");
+    background-repeat: repeat-y;
+    overflow: hidden;
+    width: 5%;
+    -webkit-transition: ease-in-out width 1s;
+}
+
+#mynavbar:hover {
+    overflow: auto;
+    width:15%;
+    -webkit-transition:ease-in-out width 1s;
+}
+
+.navtext {  
+    padding-left: 2rem;
+}
+
+#nav-option {
+    background-color: rgba(68,85,90,0.9);
+}
+
+
+

@@ -13,45 +13,46 @@
 @inject IIngredientRepository IngredientRepository
 @inject MealRepositories MealRepositories
 
-<h1>CookTogether</h1>
 
+<h1 class="justify-content-center align-self-center">CookTogether</h1>
 @if (randomMeals == null)
 {
-<div class="d-flex align-items-center">
-    <strong></strong>
-    <div class="spinner-border ms-auto" role="status" aria-hidden="true"></div>
-</div>
+    <div class="d-flex">
+        <strong></strong>
+        <div class="spinner-border ms-auto" role="status" aria-hidden="true"></div>
+    </div>
 }
 else
 {
-<div class="row g-3">
+    <div class="d-flex">
 
-    @foreach (var meal in randomMeals)
-    {
-        <div>
-            <div class="card" style="width: 18rem;">
-                <img src="@meal.ThumbnailUrl" class="card-img-top">
-                <div class="card-body">
-                    <h5 class="card-title">@meal.Name </h5>
-                    <a href="/Meal/@meal.Id" class="card-link">See more</a>
+        <div class="row g-3 align-content-center justify-content-center">
+            @foreach (var meal in randomMeals)
+            {
+                <div>
+                    <div class="card" style="width: 18rem;">
+                        <img src="@meal.ThumbnailUrl" class="card-img-top">
+                        <div class="card-body">
+                            <h5 class="card-title">@meal.Name </h5>
+                            <a href="/Meal/@meal.Id" class="card-link">See more</a>
+                        </div>
+                    </div>
                 </div>
-            </div>
+            }
         </div>
-    }       
-</div>
+    </div>
 }
-
 @code{
 
-public List<MealModel> mealModels;
-public List<MealModel> randomMeals;
-public Random rand = new Random(DateTime.Now.Millisecond);
+    public List<MealModel> mealModels;
+    public List<MealModel> randomMeals;
+    public Random rand = new Random(DateTime.Now.Millisecond);
 
-protected override async Task OnInitializedAsync()
-{
-    mealModels = await MealRepositories.MealRepository.GetMeals();
-    randomMeals = mealModels.OrderBy(x => rand.Next()).Take(10).ToList<MealModel>();
-    await InvokeAsync(() => StateHasChanged());
-}
+    protected override async Task OnInitializedAsync()
+    {
+        mealModels = await MealRepositories.MealRepository.GetMeals();
+        randomMeals = mealModels.OrderBy(x => rand.Next()).Take(10).ToList<MealModel>();
+        await InvokeAsync(() => StateHasChanged());
+    }
 
 }

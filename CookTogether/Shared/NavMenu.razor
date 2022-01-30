@@ -1,42 +1,44 @@
-﻿<div class="top-row pl-4 navbar navbar-dark">
-    <a class="navbar-brand" href="">CookTogether</a>
-    <button class="navbar-toggler" @onclick="ToggleNavMenu">
-        <span class="navbar-toggler-icon"></span>
-    </button>
-</div>
+﻿@inject IJSRuntime JsRuntime
 
-<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
-    <ul class="nav flex-column">
-        <li class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="oi oi-home" aria-hidden="true"></span> Home
-            </NavLink>
-        </li>
-        @if (user.Identity.IsAuthenticated)
-        {
+
+   <div class="top-row pl-4 navbar navbar-dark">
+        <button class="navbar-toggler" @onclick="ToggleNavMenu">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+    </div>
+
+    <div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
+        <ul class="nav flex-column">
             <li class="nav-item px-3">
-                <NavLink class="nav-link" href="friends">
-                    <span class="oi oi-people" aria-hidden="true"></span> Friends
+                <NavLink class="nav-link" href="" Match="NavLinkMatch.All" id="nav-option">
+                    <span class="oi oi-home" aria-hidden="true"></span><span class="navtext"> Home</span>
                 </NavLink>
             </li>
-
-            <li class="nav-item px-3">
-                <NavLink class="nav-link" href="parties/all">
-                    <span class="oi oi-heart" aria-hidden="true"></span> Parties
-                </NavLink>
-            </li>
-            @if (user.IsInRole("Admin"))
+            @if (user.Identity.IsAuthenticated)
             {
                 <li class="nav-item px-3">
-                    <NavLink class="nav-link" href="admin">
-                        <span class="oi oi-list-rich" aria-hidden="true"></span> Admin
+                    <NavLink class="nav-link" href="friends" id="nav-option">
+                        <span class="oi oi-people" aria-hidden="true"></span> <span class="navtext">Friends</span>
                     </NavLink>
                 </li>
-            }
 
-        }
-    </ul>
-</div>
+                <li class="nav-item px-3">
+                    <NavLink class="nav-link" href="parties/all" id="nav-option">
+                        <span class="oi oi-heart" aria-hidden="true"></span><span class="navtext"> Parties</span>
+                    </NavLink>
+                </li>
+                @if (user.IsInRole("Admin"))
+                {
+                    <li class="nav-item px-3">
+                        <NavLink class="nav-link" href="admin" id="nav-option">
+                            <span class="oi oi-list-rich" aria-hidden="true"></span> <span class="navtext">Admin</span>
+                        </NavLink>
+                    </li>
+                }
+            }
+        </ul>
+    </div>
+
 
 @code {
     private bool collapseNavMenu = true;
@@ -56,5 +58,22 @@
     {
         base.OnInitialized();
         user = (await AuthState).User;
+    }
+
+
+    public int Height { get; set; }
+    public int Width { get; set; }
+
+    private async Task InitializeDimentions()
+    {
+        var dimension = await JsRuntime.InvokeAsync<WindowDimension>("getWindowDimensions");
+        Height = dimension.Height;
+        Width = dimension.Width;
+    }
+
+    public class WindowDimension
+    {
+        public int Width { get; set; }
+        public int Height { get; set; }
     }
 }
