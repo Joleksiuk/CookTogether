@@ -1,0 +1,6 @@
+﻿namespace CookTogether
+{
+    public class init
+    {
+    }
+}
