@@ -40,7 +40,7 @@ else
     <div class="row d-flex card-group mb-2">
         @foreach(var (meal, i) in topMeals.Select((meal, i) => (meal, i + 1)))
         {
-            <div class="col d-flex">
+            <div class="col d-flex mb-3">
                 <MealCardSmall Meal="meal">
                     <h2> <span class="badge w-100 top-@i">#@i</span></h2>
                 </MealCardSmall>
@@ -72,8 +72,8 @@ else
                     </td>
                     <td style="width: 50%;" colspan="3">
                         <div class="progress">
-                            <div class="progress-bar" role="progressbar" style="width:@((((float)meal.VoteNumber/(float)meal.NumberUsersVoted)*100))%"
-                                 aria-valuenow="@((((float)meal.VoteNumber/(float)meal.NumberUsersVoted)*100))" aria-valuemin="0" aria-valuemax="100">@((((float)meal.VoteNumber/(float)meal.NumberUsersVoted)*100))%</div>
+                            <div class="progress-bar" role="progressbar" style="width:@(Math.Ceiling((((float)meal.VoteNumber/(float)meal.NumberUsersVoted)*100)))%;)"
+                                 aria-valuenow="@(Math.Ceiling((((float)meal.VoteNumber/(float)meal.NumberUsersVoted)*100)))%" aria-valuemin="0" aria-valuemax="100">@(Math.Ceiling((((float)meal.VoteNumber/(float)meal.NumberUsersVoted)*100)))%</div>
                         </div>
                     </td>
                     <td colspan="1"> @meal.NumberUsersVoted </td>

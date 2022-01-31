@@ -1,0 +1,42 @@
+﻿@{
+    if (ViewData.TryGetValue("ParentLayout", out var parentLayout))
+    {
+        Layout = (string)parentLayout;
+    }
+    else
+    {
+        Layout = "/Areas/Identity/Pages/_Layout.cshtml";
+    }
+}
+<style>
+    body {
+        background-image: url("https://i.postimg.cc/4Nds6XPr/1702-m10-i304-n005-F-c06-551922376-White-doodle-vegetables-and-fruits-isolated-on-blackboard-seamles.jpg");
+        background-repeat: repeat;
+    }
+
+    #ma-panel {
+        background-color: rgba(255, 255, 255, 0.95);
+        border-radius: 30px;
+        padding:30px;
+    }
+</style>
+
+
+<div id="ma-panel">
+    <h2>Manage your account</h2>
+
+    <h4>Change your account settings</h4>
+    <hr />
+    <div class="row">
+        <div class="col-md-3">
+            <partial name="_ManageNav" />
+        </div>
+        <div class="col-md-9">
+            @RenderBody()
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @RenderSection("Scripts", required: false)
+}

@@ -1,0 +1,46 @@
+﻿@page
+@model RegisterModel
+@{
+    ViewData["Title"] = "Register";
+}
+
+<style>
+    body {
+        background-image: url("https://i.postimg.cc/4Nds6XPr/1702-m10-i304-n005-F-c06-551922376-White-doodle-vegetables-and-fruits-isolated-on-blackboard-seamles.jpg");
+        background-repeat: repeat;
+    }
+
+    #login-panel {
+        background-color: rgba(255, 255, 255, 0.95);
+        border-radius: 30px;
+    }
+</style>
+
+<div class="d-flex justify-content-center" id="login-panel">
+ 
+    <form class="form-group" asp-route-returnUrl="@Model.ReturnUrl" method="post">
+        <h2>@ViewData["Title"]</h2>
+        <h4>Create a new account.</h4>
+        <hr />
+        <div asp-validation-summary="All" class="text-danger"></div>
+        <div class="form-group">
+            <label asp-for="Input.Email"></label>
+            <input asp-for="Input.Email" class="form-control" />
+            <span asp-validation-for="Input.Email" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="Input.Password"></label>
+            <input asp-for="Input.Password" class="form-control" />
+            <span asp-validation-for="Input.Password" class="text-danger"></span>
+        </div>
+        <div class="form-group">
+            <label asp-for="Input.ConfirmPassword"></label>
+            <input asp-for="Input.ConfirmPassword" class="form-control" />
+            <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+        </div>
+        <button type="submit" class="btn btn-primary">Register</button>
+    </form>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

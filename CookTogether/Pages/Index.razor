@@ -23,18 +23,16 @@
 }
 else
 {
-
 <div class="card-group row d-flex">
     @foreach (var meal in randomMeals)
     {
-        <div class="col-lg-3 d-flex">
+        <div class="col-lg-3 d-flex mb-2">
             <MealCardSmall Meal="meal"></MealCardSmall>
         </div>
     }
 </div>
 
 }
-
 @code{
 
     public List<MealModel> mealModels;
