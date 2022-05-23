@@ -1,2 +1,2 @@
 ﻿# CookTogether
-![img](https://zapodaj.net/e608f1827203e.png.html)
+![alt text](\CookTogether\wwwroot\cooktogether.png)
