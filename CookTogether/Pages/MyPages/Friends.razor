@@ -1,0 +1,242 @@
+﻿@page "/friends"
+
+@using DataAccessLibrary
+@using DataAccessLibrary.Models
+@using CookTogether.Models
+@using CookTogether.Models.Display
+@using CookTogether.Pages.Components
+
+@inject IUserRepository UserRepository
+@inject IFriendshipsRepository FriendshipRepository
+@attribute [Authorize]
+
+<PageTitle Text="Friends" WithButtonGrid="true">
+    <RefreshButton onclick="@LoadData"/>
+</PageTitle>
+
+@if (friendableUsers == null || friendlist == null || invitingUsers == null || invitedUsers == null)
+{
+    <LoadingSpinner/>
+}
+else
+{
+    @if (friendlist.Any())
+    {
+        <PageSubtitle Text="Your friendlist" />
+        <table class="table table-striped">
+            <tbody>
+                @foreach (var friend in friendlist)
+                {
+                    <tr>
+                        <td class="w-50">@friend.UserName</td>
+                        <td class="w-50">
+                            <ButtonGrid>
+                                <button class="btn btn-outline-danger button-sm" @onclick="() => removeFriend(friend)">Remove</button>
+                            </ButtonGrid>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+
+    @if (invitingUsers.Any())
+    {
+        <PageSubtitle Text="Received friend invites"/>
+        <table class="table table-striped">
+            <tbody>
+                @foreach (var user in invitingUsers)
+                {
+                    <tr>
+                        <td class="w-50">@user.UserName</td>
+                        <td class="w-50">
+                            <ButtonGrid>
+                                <button class="btn btn-outline-success button-sm" @onclick="() => acceptInvite(user)">Accept</button>
+                                <button class="btn btn-outline-danger button-sm" @onclick="() => ignoreInvite(user)">Ignore</button>
+                            </ButtonGrid>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+    @if (invitedUsers.Any())
+    {
+        <PageSubtitle Text="Sent friend invites"/>
+        <table class="table table-striped">
+            <thread>
+                <tr>
+                    <th scope="col">Username</th>
+                    <th scope="col"></th>
+                </tr>
+            </thread>
+            <tbody>
+                @foreach (var user in invitedUsers)
+                {
+                    <tr>
+                        <td class="w-50">@user.UserName</td>
+                        <td class="w-50">
+                            <ButtonGrid>                      
+                                <button class="btn btn-outline-danger" @onclick="() => cancelInvite(user)">Cancel</button>
+                            </ButtonGrid>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+
+
+    <PageSubtitle Text="Available users"/>
+    <EditForm Model="@userSearchModel" OnValidSubmit="@handleSearchSubmit">
+        <div class="row my-2">
+            <div class="col">
+                <InputText id="search" placeholder="Username" class="form-control" @bind-Value="userSearchModel.UserName"></InputText>
+            </div>
+            <div class="col">
+                <button type="submit" class="btn btn-secondary"><span class="oi oi-magnifying-glass"></span>Search</button>
+            </div>
+        </div>
+    </EditForm>
+
+    <table class="table table-striped">
+        <thread>
+            <tr>
+                <th scope="col"></th>
+                <th scope="col"></th>
+            </tr>
+        </thread>
+        <tbody>
+            @foreach (var user in friendableUsers)
+            {
+                <tr>
+                    <td class="w-50">@user.UserName</td>
+                    <td class="w-50"> 
+                        <ButtonGrid>
+                            <button class="btn btn-outline-primary" @onclick="() => sendInvite(user)">Invite</button>
+                        </ButtonGrid>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+
+@code {
+
+    private UserSearchModel userSearchModel = new UserSearchModel();
+
+    //Currently logged user identity
+    [CascadingParameter]
+    private Task<AuthenticationState> authStateTask { get; set; }
+    private AuthenticationState authenticationState;
+    private string loggedUserID;
+    private UserModel loggedUser;
+
+    //USERS
+    private List<UserModel> users;
+    private List<UserModel> friendableUsers;
+    private List<UserModel> invitingUsers;
+    private List<UserModel> invitedUsers;
+
+    private bool isLoading = false;
+
+
+    //FRIENDSHIPS
+    private List<UserModel> friendlist;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        users = await UserRepository.GetUsers();
+        authenticationState = await authStateTask;
+
+
+
+        loggedUserID = authenticationState.User.Claims.FirstOrDefault().Value;
+        loggedUser = await UserRepository.GetUserById(loggedUserID);
+        await LoadData();
+
+        await InvokeAsync(() => StateHasChanged());
+    }
+
+    private async Task LoadData()
+    {
+        friendlist = await FriendshipRepository.GetFriendListOfUser(loggedUserID);
+        friendableUsers = await FriendshipRepository.GetNotFriendedAndNotInvitedListOfUser(loggedUserID);
+        invitingUsers = await FriendshipRepository.GetInvitingUsersByInvitedUserId(loggedUserID);
+        invitedUsers = await FriendshipRepository.GetInvitedUsersByInvitingUserId(loggedUserID);
+    }
+
+    private async Task addFriend(UserModel friend)
+    {
+        FriendshipModel friendshipModel = new FriendshipModel
+        {
+            FirstUserId = friend.Id,
+            SecondUserId = loggedUserID
+        };
+
+        await FriendshipRepository.InsertFriendship(friendshipModel);
+        friendlist.Add(friend);
+        friendableUsers.Remove(friend);
+    }
+
+    private async Task removeFriend(UserModel friend)
+    {
+        friendlist.Remove(friend);
+        friendableUsers.Add(friend);
+        await FriendshipRepository.RemoveFriendship(friend, loggedUser);
+    }
+
+    private async Task acceptInvite(UserModel user)
+    {
+        invitingUsers.Remove(user);
+        await addFriend(user);
+        await FriendshipRepository.RemoveFriendInvite(new FriendInviteModel
+        {
+            InvitedUserId = loggedUserID,
+            InvitingUserId = user.Id
+        });
+
+    }
+
+    private async Task ignoreInvite(UserModel user)
+    {
+        invitingUsers.Remove(user);
+        await FriendshipRepository.RemoveFriendInvite(new FriendInviteModel
+        {
+            InvitedUserId = loggedUserID,
+            InvitingUserId = user.Id
+        });
+    }
+
+    private async Task sendInvite(UserModel user)
+    {
+        friendableUsers.Remove(user);
+        invitedUsers.Add(user);
+        await FriendshipRepository.InsertFriendInvite(new FriendInviteModel
+        {
+            InvitingUserId = loggedUserID,
+            InvitedUserId = user.Id
+        });
+    }
+
+    private async Task cancelInvite(UserModel user)
+    {
+        invitedUsers.Remove(user);
+        await FriendshipRepository.RemoveFriendInvite(new FriendInviteModel
+        {
+            InvitingUserId = loggedUserID,
+            InvitedUserId = user.Id
+        });
+    }
+
+    private async void handleSearchSubmit()
+    {
+        friendableUsers = await FriendshipRepository.GetNotFriendedAndNotInvitedListOfUser(loggedUserID, userSearchModel.UserName);
+        await InvokeAsync(StateHasChanged);
+    }
+}

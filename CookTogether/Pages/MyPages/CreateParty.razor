@@ -1,0 +1,232 @@
+﻿@page "/Create-party"
+
+@using DataAccessLibrary
+@using DataAccessLibrary.Models
+@using DataAccessLibrary.MealRepositories
+@using CookTogether.Data
+@using CookTogether.Pages.Components
+
+@inject ICategoryRepository CategoryRepository
+@inject IAreaRepository AreaRepository
+@inject IPartyRepository PartyRepository
+@inject IUserRepository UserRepository
+@inject Blazored.Localisation.Services.IBrowserDateTimeProvider browserDateTimeProvider
+@inject NavigationManager NavManager
+@inject PartyService PartyService
+
+<PageTitle Text="Create party"></PageTitle>
+@if (categories == null || areas == null)
+{
+    <LoadingSpinner/>
+}
+else
+{
+    <div>
+        <AlertMessage Message="@messege" MessageType="@messegeType" />
+
+        <EditForm Model="@party" OnValidSubmit="@InsertParty">
+
+            <div class="mb-3">
+                <label for="PartyName" class="form-label">Party name:</label>
+                <InputText class="form-control" id="PartyName" @bind-Value="@party.PartyName" placeholder="Name" />
+            </div>
+            <div class="row mb-3">
+                <div class="col">
+                    <label for="categories-check">Meal category choice: </label>
+                    <div class="mb-2">
+                        <button type="button" class="@GetSelectUnselectCategoriesClass()" @onclick="@selectUnselectAllCategories">@GetSelectUnselectCategoriesLabel()</button>
+                    </div>
+                    <div id="categories-check" style="display: grid; grid-template-columns: 1fr 1fr 1fr; ">
+                        @foreach (var category in categories)
+                        {
+                            <div class="form-check">
+                                <input id="@category.Id" type="checkbox" checked="@ChosenCategories.Contains(category)" class="form-check-input" @onchange="eventArgs => CategoryCheckboxClicked(category, eventArgs.Value)" />
+                                <label for="@category.Id" class="form-check-label">@category.Name</label>
+                            </div>
+                        }
+                    </div>
+                </div>
+
+                <div class="col">
+                    <label for="areas-check">Meal origin area choice: </label>
+                    <div class="mb-2">
+                        <button type="button" class="@GetSelectUnselectAreasClass()" @onclick="@selectUnselectAllAreas">@GetSelectUnselectAreasLabel()</button>
+                    </div>
+                    <div id="areas-check" style="display: grid; grid-template-columns: 1fr 1fr 1fr; ">
+                        @foreach (var area in areas)
+                        {
+                            <div class="form-check">
+                                <input id="@area.Id" type="checkbox" checked="@ChosenAreas.Contains(area)" class="form-check-input" @onchange="eventArgs => AreaCheckboxClicked(area, eventArgs.Value)" />
+                                <label for="@area.Id" class="form-check-label">@area.Name</label>
+                            </div>
+                        }
+                    </div>
+
+                </div>
+            </div>
+            <div class="d-flex justify-content-center my-4">
+                <button type="submit" class="btn btn-outline-success">Create</button>
+            </div>
+
+        </EditForm>
+    </div>
+}
+
+@code {
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authStateTask { get; set; }
+    private AuthenticationState authenticationState;
+    UserModel loggedUser;
+    private string loggedUserID;
+
+    string messege = string.Empty;
+    AlertMessageType messegeType = AlertMessageType.Success;
+    bool letInsertHappen = true;
+
+    PartyModel party { get; set; }
+    string currentLocalTime = "";
+
+    List<CategoryModel> categories;
+    List<AreaModel> areas;
+    public List<CategoryModel> ChosenCategories = new();
+    public List<AreaModel> ChosenAreas = new();
+
+    public readonly string selectLabel = "Select all";
+    public readonly string unselectLabel = "Unselect all";
+
+    public readonly string selectClass = "btn btn-outline-secondary btn-sm";
+    public readonly string unselectClass = "btn btn-secondary btn-sm";
+
+    protected override async Task OnInitializedAsync()
+    {
+        party = new PartyModel();
+
+        authenticationState = await authStateTask;
+        loggedUserID = authenticationState.User.Claims.FirstOrDefault().Value;
+        loggedUser = await UserRepository.GetUserById(loggedUserID);
+
+        categories = await CategoryRepository.GetCategories();
+        areas = await AreaRepository.GetAreas();
+
+        await InvokeAsync(() => StateHasChanged());
+    }
+
+    private async Task InsertParty()
+    {
+
+        messege = string.Empty;
+        messegeType = default;
+        letInsertHappen = true;
+
+        var browserDateTime = await browserDateTimeProvider.GetInstance();
+        currentLocalTime = browserDateTime.Now.ToString();
+        System.DateTime currentDate = DateTime.Parse(currentLocalTime);
+
+
+        await ValidateInputData(party.PartyName);
+
+        if (letInsertHappen)
+        {
+            PartyModel newPartyModel = await PartyService.CreateParty(ChosenCategories, ChosenAreas, party.PartyName, loggedUserID, currentDate);
+            NavManager.NavigateTo("/party-room/" + (newPartyModel.Id).ToString());
+        }
+    }
+
+    void CategoryCheckboxClicked(CategoryModel category, object checkedValue)
+    {
+        if ((bool)checkedValue)
+        {
+            ChosenCategories.Add(category);
+        }
+        else
+        {
+            ChosenCategories.Remove(category);
+        }
+    }
+
+    void AreaCheckboxClicked(AreaModel area, object checkedValue)
+    {
+        if ((bool)checkedValue)
+        {
+            ChosenAreas.Add(area);
+        }
+        else
+        {
+            ChosenAreas.Remove(area);
+        }
+    }
+
+    private async Task ValidateInputData(string partyName)
+    {
+        var checkMealNumTask = PartyService.CategoriesAndAreasHaveMinNumOfMeals(ChosenCategories, ChosenAreas);
+        if (partyName == null || partyName == string.Empty)
+        {
+            letInsertHappen = false;
+            messege = "Party name can't be empty!";
+            messegeType = AlertMessageType.Error;
+        }
+        else if (ChosenAreas.Count == 0)
+        {
+            letInsertHappen = false;
+            messege = "You have to choose at least one area!";
+            messegeType = AlertMessageType.Error;
+        }
+        else if (ChosenCategories.Count == 0)
+        {
+            letInsertHappen = false;
+            messege = "You have to choose at least one category!";
+            messegeType = AlertMessageType.Error;
+        }
+        else if (!(await checkMealNumTask))
+        {
+            letInsertHappen = false;
+            messege = "Please choose more categories or areas.";
+            messegeType = AlertMessageType.Warning;
+        }
+    }
+
+    protected void selectUnselectAllCategories()
+    {
+        if (ChosenCategories.Any())
+        {
+            ChosenCategories = new List<CategoryModel>();
+        }
+        else
+        {
+            ChosenCategories = new List<CategoryModel>(categories);
+        }
+    }
+
+    public void selectUnselectAllAreas()
+    {
+        if (ChosenAreas.Any())
+        {
+            ChosenAreas = new List<AreaModel>();
+        }
+        else
+        {
+            ChosenAreas = new List<AreaModel>(areas);
+        }
+    }
+
+    public string GetSelectUnselectAreasLabel()
+    {
+        return ChosenAreas.Any() ? unselectLabel : selectLabel;
+    }
+
+    public string GetSelectUnselectCategoriesLabel()
+    {
+        return ChosenCategories.Any() ? unselectLabel : selectLabel;
+    }
+
+    public string GetSelectUnselectAreasClass()
+    {
+        return ChosenAreas.Any() ? unselectClass : selectClass;
+    }
+
+    public string GetSelectUnselectCategoriesClass()
+    {
+        return ChosenCategories.Any() ? unselectClass : selectClass;
+    }
+}

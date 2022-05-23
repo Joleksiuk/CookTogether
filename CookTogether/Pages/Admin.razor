@@ -1,0 +1,134 @@
+﻿@page "/admin"
+
+@using CookTogether.Data
+@using Microsoft.AspNetCore.Authorization;
+@using Microsoft.AspNetCore.Identity;
+
+@inject DatabaseUpdateFromApiService databaseUpdateService
+@inject UserManager<IdentityUser> _UserManager
+@inject RoleManager<IdentityRole> _RoleManager
+@inject AuthenticationStateProvider AuthenticationStateProvider
+
+@attribute [Authorize]
+
+<AuthorizeView>
+    <Authorized>
+        @if (@context.User.IsInRole(ADMINISTRATOR_ROLE))
+        {
+            <h1>Admin panel</h1>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>Update all</th>
+                        <th>Update ingredients</th>
+                        <th>Update meals</th>
+                        <th>Update categories</th>
+                        <th>Update areas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><button class="btn btn-secondary" @onclick="UpdateAll">Run all</button></td>
+                        <td><button class="btn btn-secondary" @onclick="UpdateIngredients">Run ingredients</button></td>
+                        <td><button class="btn btn-secondary" @onclick="UpdateMeals">Run meals</button></td>
+                        <td><button class="btn btn-secondary" @onclick="UpdateCategories">Run categories</button></td>
+                        <td><button class="btn btn-secondary" @onclick="UpdateAreas">Run areas</button></td>
+                    </tr>
+                </tbody>
+            </table>
+            <ul class="list-group">
+                @foreach (var log in consoleLogs)
+                {
+                    <li class="list-group-item">@log</li>
+                }
+            </ul>
+        }
+        else
+        {
+            <p>You're not signed in as a user in @ADMINISTRATOR_ROLE.</p>
+        }
+    </Authorized>
+    <NotAuthorized>
+        <p>You're not loggged in.</p>
+    </NotAuthorized>
+</AuthorizeView>
+
+
+
+
+@code {
+
+    List<string> consoleLogs = new();
+    protected bool isAdmin = false;
+    string ADMINISTRATOR_ROLE = "Admin";
+
+    protected System.Security.Claims.ClaimsPrincipal CurrentUser;
+
+    [CascadingParameter] protected Task<AuthenticationState> AuthState { get; set; }
+
+    protected async override Task OnInitializedAsync()
+    {
+        base.OnInitialized();
+        CurrentUser = (await AuthState).User;
+
+        var RoleResult = await _RoleManager.FindByNameAsync(ADMINISTRATOR_ROLE);
+        if (RoleResult == null)
+        {
+            await _RoleManager.CreateAsync(new IdentityRole(ADMINISTRATOR_ROLE));
+        }
+        var user = await _UserManager.FindByNameAsync("ctgadmin@ctg.pl");
+        if (user != null)
+        {
+            var UserResult = await _UserManager.IsInRoleAsync(user, ADMINISTRATOR_ROLE);
+            if (!UserResult)
+            {
+                await _UserManager.AddToRoleAsync(user, ADMINISTRATOR_ROLE);
+            }
+        }
+    }
+
+    protected async Task UpdateAll()
+    {
+        await Task.WhenAll(
+            UpdateAreas(),
+            UpdateCategories(),
+            UpdateIngredients());
+        await UpdateMeals();
+        await Log("All done");
+    }
+
+    protected async Task UpdateCategories()
+    {
+        await Log("Updating categories...");
+        await databaseUpdateService.UpdateCategories();
+        await Log("Categories updated");
+    }
+
+    protected async Task UpdateAreas()
+    {
+        await Log("Updating areas...");
+        await databaseUpdateService.UpdateAreas();
+        await Log("Areas updated");
+    }
+
+    protected async Task UpdateMeals()
+    {
+        await Log("Updating meals... (this may take up to 5 minutes");
+        await databaseUpdateService.UpdateMeals();
+        await Log("Meals updated");
+    }
+
+    protected async Task UpdateIngredients()
+    {
+        await Log("Updating ingredients...");
+        await databaseUpdateService.UpdateIngredients();
+        await Log("Ingredients updated");
+
+    }
+
+    private async Task Log(string message)
+    {
+        consoleLogs.Add(message);
+        await InvokeAsync(() => StateHasChanged());
+    }
+}

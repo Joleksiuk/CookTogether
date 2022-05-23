@@ -1,0 +1,33 @@
+﻿@using DataAccessLibrary.Models
+
+
+<div class="card meal-card-small">
+    @if (Meal == null)
+    {
+        <LoadingSpinner></LoadingSpinner>
+    }
+    else
+    {
+        <img src="@Meal.ThumbnailUrl" class="card-img-top">
+        @if (ChildContent != null)
+        {
+            <div class="card-header">
+                @ChildContent
+            </div>
+        }
+        <div class="card-body">
+            <h5 class="card-title">@Meal.Name </h5>
+            <a href="/Meal/@Meal.Id" class="btn-sm btn btn-outline-secondary">See more</a>
+        </div>
+    }
+
+</div>
+
+@code {
+    [Parameter]
+    public MealModel Meal { get; set; }
+
+    [Parameter]
+    public RenderFragment ChildContent { get; set; }
+
+}

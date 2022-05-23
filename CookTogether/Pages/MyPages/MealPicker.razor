@@ -1,0 +1,113 @@
+﻿@page "/party-room/{RoomId:int}/MealPicker/"
+
+@using CookTogether.Data
+@using DataAccessLibrary
+@using DataAccessLibrary.Models
+@using DataAccessLibrary.MealRepositories
+@using CookTogether.Pages.Components
+
+@inject MealRepositories mealRepositories
+@inject PartyService partyService
+@inject NavigationManager navigationManager
+
+@attribute [Authorize]
+
+
+
+<PageTitle Text="Meal picker" />
+@if (isLoading)
+{
+    <LoadingSpinner></LoadingSpinner>
+}
+else if(currentMeal!=null)
+{
+    <MealCard Meal="@currentMeal">
+        <p>Would you like to try that meal?</p>
+        <div class="row">
+            <div class="col">
+                <button class="btn btn-success btn-block" @onclick="AcceptMeal"><span class="oi oi-thumb-up"></span>Yes</button>
+            </div>
+            <div class="col">
+                <button class="btn btn-danger btn-block" @onclick="RejectMeal"><span class="oi oi-thumb-down"></span>No</button>
+            </div>
+        </div>
+    </MealCard>
+}
+else
+{
+    <AlertMessage Message="Seems like you already have picked your meals..."></AlertMessage>
+    <button class="btn btn-primary btn-block" @onclick="NavigateToPartyRoom">Skip to party results</button> 
+}
+
+@code {
+    [Parameter]
+    public int? RoomId { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authStateTask { get; set; }
+
+    List<MealModel> partyMeals;
+
+    MealModel currentMeal;
+    string userId;
+
+    bool isLoading = true;
+
+    JustifyContentType buttonJustifyType = JustifyContentType.Center;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authenticationState = await authStateTask;
+        userId = authenticationState.User.Claims.FirstOrDefault().Value;
+
+        partyMeals = await partyService.GetPartyMealsForUser(RoomId.Value, userId);
+        NextMeal();
+        isLoading = false;
+        StateHasChanged();
+    }
+
+    protected async Task AcceptMeal()
+    {
+        await MakeChoice(true);
+    }
+
+    protected async Task RejectMeal()
+    {
+        await MakeChoice(false);
+    }
+
+    protected async Task MakeChoice(bool choice)
+    {
+        int mealId = currentMeal.Id;
+
+        await partyService.SaveChoice(RoomId.Value, userId, mealId, choice);
+        NextMealOrRedirect();
+
+    }
+
+    protected void NextMealOrRedirect()
+    {
+        if (!NextMeal())
+        {
+            NavigateToPartyRoom();
+        }
+    }
+
+    private void NavigateToPartyRoom()
+    {
+        navigationManager.NavigateTo($"/party-room/{RoomId.Value}/result-board");
+    }
+
+    private bool NextMeal()
+    {
+
+        if (partyMeals.FirstOrDefault() == default)
+        {
+            return false;
+        }
+        currentMeal = partyMeals.First();
+        partyMeals.Remove(currentMeal);
+        StateHasChanged();
+        return true;
+    }
+}

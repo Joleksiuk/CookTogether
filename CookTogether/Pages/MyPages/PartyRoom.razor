@@ -1,0 +1,177 @@
+﻿@page "/party-room/{RoomId:int}"
+
+@using DataAccessLibrary
+@using DataAccessLibrary.Models
+@using CookTogether.Models
+@using DataAccessLibrary.MealRepositories
+@using CookTogether.Data
+@using CookTogether.Pages.Components
+
+@inject IUserRepository UserRepository
+@inject IPartyRepository PartyRepository
+@inject PartyService PartyService
+@inject NavigationManager NavManager
+
+@attribute [Authorize]
+@if (party == null || partyMembers == null || invitedUsers == null || friendsYouCouldInvite == null)
+{
+    <LoadingSpinner></LoadingSpinner>
+}
+else
+{
+    <PageTitle Text="@pageTitleText" WithButtonGrid="true">
+        <RefreshButton onclick="@LoadData"/>
+    </PageTitle>
+
+    <div class="mb-3 row">
+        <div class="col">
+            <button type="button" class="btn btn-success btn-block py-3" @onclick="()=>InitializeMealPicker()">Meal picker</button>
+        </div>
+        <div class="col">
+            <button type="button" class="btn btn-info btn-block py-3" @onclick="()=>ShowCurrentResultBoard()">Result board</button>
+        </div>
+    </div>
+
+    <PageSubtitle Text="Party members:" />
+    <table class="table table-striped">
+        <tbody>
+            @foreach (var user in partyMembers)
+            {
+                <tr>
+                    <td>@user.UserName</td>
+                    @if (party.OwnerUserId == loggedUserID && user.Id != party.OwnerUserId)
+                    {
+                        <td> <button type="button" class="btn btn-outline-danger" @onclick="() =>RemoveUserFromParty(user)">Kick</button></td>
+                    }
+                    else if (user.Id == party.OwnerUserId)
+                    {
+                        <td>
+                            <span class="badge badge-info">OWNER</span>
+                        </td>
+                    }
+                    else
+                    {
+                        <td> </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <div class="row g-3 my-3">
+        <div class="col-md-6">
+            <PageSubtitle Text="Friends" />
+            <table class="table table-striped">
+                <tbody>
+                    @foreach (var user in friendsYouCouldInvite)
+                    {
+                        <tr>
+                            <td class="w-50">@user.UserName</td>
+                            <td class="w-50"> <button type="button" class="btn btn-outline-primary" @onclick="() =>InviteUserToParty(user)">Invite</button></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="col-md-6">
+            @if (invitedUsers.Any())
+            {
+                <PageSubtitle Text="Invited" />
+
+                <table class="table table-striped">
+                    <tbody>
+                        @foreach (var user in invitedUsers)
+                        {
+                            <tr>
+                                <td class="w-50">@user.UserName</td>
+                                <td class="w-50">
+                                    <button type="button" class="btn btn-outline-dark" @onclick="() =>CancelUserInvitationToParty(user)">Cancel</button>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public int? RoomId { get; set; }
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authStateTask { get; set; }
+    private AuthenticationState authenticationState;
+    private string loggedUserID;
+
+    List<UserModel> partyMembers;
+    List<UserModel> invitedUsers;
+    List<UserModel> friendsYouCouldInvite;
+    UserModel loggedUser;
+
+    string pageTitleText;
+
+    PartyModel party;
+
+    protected override async Task OnInitializedAsync()
+    {
+        authenticationState = await authStateTask;
+        loggedUserID = authenticationState.User.Claims.FirstOrDefault().Value;
+        loggedUser = await UserRepository.GetUserById(loggedUserID);
+
+        party = await PartyRepository.GetPartyById(RoomId.ToString());
+        await LoadData();
+
+        pageTitleText = $"Welcome to the {party.PartyName} party!";
+
+        await InvokeAsync(() => StateHasChanged());
+    }
+
+    private async Task LoadData()
+    {
+        partyMembers = await PartyRepository.GetAllPartyMembers(party, loggedUser);
+        invitedUsers = await PartyRepository.GetUsersInvitedToParty(party, loggedUser);
+        friendsYouCouldInvite = await PartyRepository.GetFriendedAndNotMemeberListOfUsers(loggedUserID, RoomId.Value);
+    }
+
+    private void AddUserToParty(UserModel user)
+    {
+        PartyService.AddUserToParty(user, party);
+        partyMembers.Add(user);
+        friendsYouCouldInvite.Remove(user);
+    }
+
+    private void RemoveUserFromParty(UserModel user)
+    {
+        PartyService.RemoveUserFromParty(user, party);
+        partyMembers.Remove(user);
+        friendsYouCouldInvite.Remove(user);
+    }
+
+    private void InviteUserToParty(UserModel user)
+    {
+        PartyService.InviteUserToParty(user, party);
+        invitedUsers.Add(user);
+        friendsYouCouldInvite.Remove(user);
+    }
+
+    private void CancelUserInvitationToParty(UserModel user)
+    {
+        PartyService.CancelUserInvitationToParty(user, party);
+        invitedUsers.Remove(user);
+        friendsYouCouldInvite.Add(user);
+    }
+
+    private void InitializeMealPicker()
+    {
+        NavManager.NavigateTo("/party-room/" + RoomId.ToString() + "/MealPicker/");
+    }
+
+    private void ShowCurrentResultBoard()
+    {
+        NavManager.NavigateTo("/party-room/" + RoomId.ToString() + "/result-board");
+    }
+}

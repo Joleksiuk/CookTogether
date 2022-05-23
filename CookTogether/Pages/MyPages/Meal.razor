@@ -1,0 +1,54 @@
+﻿@page "/meal/{MealId:int}"
+
+@using DataAccessLibrary.MealRepositories
+@using DataAccessLibrary.Models
+@using DataAccessLibrary.ViewModels
+
+@using CookTogether.Pages.Components
+
+@inject MealRepositories mealRepositories
+
+
+@if (isLoading)
+{
+    <LoadingSpinner />
+}
+else
+{
+    <MealCard Meal="@meal"></MealCard>
+    <section class="my-3">
+        <PageSubtitle Text="Ingredients" />
+        <ul class="list-group my-2">
+
+            @foreach (var ingredient in ingredients)
+            {
+                <li class="list-group-item">@ingredient.Measure of @ingredient.Name</li>
+            }
+        </ul>
+    </section>
+    <section class="my-3">
+        <PageSubtitle Text="Recipe" />
+        <p>@meal.Recipe</p>
+    </section>
+}
+
+
+
+
+@code {
+    [Parameter]
+    public int? MealId { get; set; }
+
+    protected List<MealIngredientModel> ingredients;
+    protected MealModel meal;
+
+    private bool isLoading = true;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        meal = await mealRepositories.MealRepository.GetMealById(MealId.Value);
+        ingredients = await mealRepositories.MealRepository.GetMealIngredientsById(MealId.Value);
+        isLoading = false;
+    }
+}

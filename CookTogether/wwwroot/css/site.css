@@ -1,0 +1,108 @@
+@import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
+
+html, body {
+    background-color:rgb(237 234 234);
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    
+}
+.pagetitle-text {
+    font-family: 'Anton', sans-serif;
+    font-family: 'Lobster', cursive;
+}
+.card.meal-card-small {
+    color: white;
+    transition: opacity 1s ease-in-out;
+    background-image: url("https://i.postimg.cc/4Nds6XPr/1702-m10-i304-n005-F-c06-551922376-White-doodle-vegetables-and-fruits-isolated-on-blackboard-seamles.jpg");
+}
+
+.card.meal-card-small:hover {
+    box-shadow: rgba(50, 50, 93, 0.25) 0px 50px 100px -20px, rgba(0, 0, 0, 0.3) 0px 30px 60px -30px, rgba(10, 37, 64, 0.35) 0px -2px 6px 0px inset;
+}
+
+.card.meal-card-small > .card-body > .card-title {
+    background-color: rgba(68,85,90,0.9);
+    border-radius:0.25rem;
+    padding: 5px;
+}
+
+.card.meal-card-small > .card-body > .btn {
+    color:white;
+}
+
+a, .btn-link {
+    color: #0366d6;
+}
+
+.btn-primary {
+    color: #fff;
+    background-color: #1b6ec2;
+    border-color: #1861ac;
+}
+
+.content {
+    padding-top: 1.1rem;
+}
+
+.valid.modified:not([type=checkbox]) {
+    outline: 1px solid #26b050;
+}
+
+.invalid {
+    outline: 1px solid red;
+}
+
+.validation-message {
+    color: red;
+}
+
+#blazor-error-ui {
+    background: lightyellow;
+    bottom: 0;
+    box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+    display: none;
+    left: 0;
+    padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+    position: fixed;
+    width: 100%;
+    z-index: 1000;
+}
+
+#blazor-error-ui .dismiss {
+    cursor: pointer;
+    position: absolute;
+    right: 0.75rem;
+    top: 0.5rem;
+}
+
+
+
+#mynavbar  {
+    background-image: url("https://i.postimg.cc/4Nds6XPr/1702-m10-i304-n005-F-c06-551922376-White-doodle-vegetables-and-fruits-isolated-on-blackboard-seamles.jpg");
+    background-repeat: repeat-y;
+}
+
+@media (min-width: 640px) {
+    #mynavbar.animable {
+        overflow: hidden;
+        width: 75px;
+        -webkit-transition: ease-in-out width 1s;
+    }
+    #mynavbar.animable:hover {
+        overflow: auto;
+        width: 225px;
+        -webkit-transition: ease-in-out width 1s;
+    }
+    .navtext {
+        padding-left: 2rem;
+    }
+}
+#nav-option {
+    background-color: rgba(68,85,90,0.9);
+}
+
+
+
+
+
+
+

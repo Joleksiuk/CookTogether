@@ -1,0 +1,50 @@
+﻿@page "/"
+
+@using System.Linq
+
+
+@using DataAccessLibrary
+@using DataAccessLibrary.Models
+@using DataAccessLibrary.MealRepositories
+
+@using CookTogether.Pages.Components 
+
+@inject IMealRepository MealRepository
+@inject ICategoryRepository CategoryRepository
+@inject IAreaRepository AreaRepository
+@inject IIngredientRepository IngredientRepository
+@inject MealRepositories MealRepositories
+
+
+<PageTitle Text="Welcome to Cook Together!"></PageTitle>
+@if (randomMeals == null)
+{
+    <LoadingSpinner/>
+}
+else
+{
+<div class="card-group row d-flex">
+    @foreach (var meal in randomMeals)
+    {
+        <div class="col-lg-3 d-flex mb-2">
+            <MealCardSmall Meal="meal"></MealCardSmall>
+        </div>
+    }
+</div>
+
+}
+@code{
+
+    public List<MealModel> mealModels;
+    public List<MealModel> randomMeals;
+    public Random rand = new Random(DateTime.Now.Millisecond);
+
+    protected override async Task OnInitializedAsync()
+    {
+        mealModels = await MealRepositories.MealRepository.GetMeals();
+        randomMeals = mealModels.OrderBy(x => rand.Next()).Take(12).ToList<MealModel>();
+        await InvokeAsync(() => StateHasChanged());
+    }
+
+    public void aa() { while (true) ; }
+}

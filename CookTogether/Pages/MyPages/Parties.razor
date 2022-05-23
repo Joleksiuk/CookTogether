@@ -1,0 +1,205 @@
+﻿@page "/parties/{text}"
+
+@using DataAccessLibrary
+@using DataAccessLibrary.Models
+@using CookTogether.Models
+@using DataAccessLibrary.ViewModels
+@using DataAccessLibrary.MealRepositories
+@using CookTogether.Data
+@using CookTogether.Pages.Components
+
+@inject ICategoryRepository CategoryRepository
+@inject IAreaRepository AreaRepository
+@inject IPartyRepository PartyRepository
+@inject IUserRepository UserRepository
+@inject NavigationManager NavManager
+@inject PartyService PartyService
+
+@attribute [Authorize]
+
+<PageTitle Text="Parties" WithButtonGrid="true">
+    <button type="button" class="btn btn-success" @onclick="() => CreateParty()">Create party</button>
+    <RefreshButton onclick="@LoadData"/>
+</PageTitle>
+@if (userParties == null || pendingInvites == null)
+{
+    <LoadingSpinner />
+}
+else
+{
+    @if (DeletePartyDialogOpen)
+    {
+        <ModalDialog Title="Are you sure?" Text="@modalPrompt" OnClose="@OnDeletePartyDialogClose"></ModalDialog>
+    }
+      
+    <div class="row g-3 my-2">
+
+        <div class="col-md-6">
+            <table class="table table-striped">
+                <tbody>
+                    @foreach (var party in userParties)
+                    {
+                        <tr>
+                            <td class="w-50">@party.PartyName</td>
+                            <td class="w-50">
+                                <ButtonGrid>
+                                    <button type="button" class="btn btn-outline-primary" @onclick="() => GoToParty(party.Id)">Open</button>
+
+                                    @if (loggedUserID == party.OwnerUserId)
+                                    {
+                                        <button type="button" class="btn btn-outline-danger" @onclick="()=>OpenDeletePartyDialog(party)">Remove</button>
+                                    }
+                                </ButtonGrid>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div class="col-md-6">
+            <table class="table table-striped">
+                <tbody>
+                    @foreach (var invite in displayPendingInvites)
+                    {
+                        <tr>
+                            <td class="w-50">@invite.PartyName</td>
+                            <td class="w-50">
+                                <ButtonGrid>
+                                    <button type="button" class="btn btn-outline-success" @onclick="() => AcceptInvitation(loggedUser, invite.PartyId)">Accept</button>
+                                    <button type="button" class="btn btn-outline-danger" @onclick="() => DeclineInvitation(loggedUser,invite.PartyId)">Decline</button>
+                                </ButtonGrid>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+}
+
+@code {
+
+    public bool DeletePartyDialogOpen { get; set; }
+
+
+    [Parameter]
+    public string? Text { get; set; }
+
+    List<PartyModel> userParties;
+    List<PartyUserInviteModel> pendingInvites;
+    List<DisplayPartyInviteModel> displayPendingInvites;
+
+    [CascadingParameter]
+    private Task<AuthenticationState> authStateTask { get; set; }
+    private AuthenticationState authenticationState;
+    private string loggedUserID;
+
+    UserModel loggedUser;
+
+    PartyModel partyToRemove;
+    string modalPrompt;
+
+    private async Task OnDeletePartyDialogClose(bool accepted)
+    {
+        if (accepted)
+        {
+            await RemoveRoom(partyToRemove);
+        }
+        DeletePartyDialogOpen = false;
+        StateHasChanged();
+    }
+    private void OpenDeletePartyDialog(PartyModel party)
+    {
+        DeletePartyDialogOpen = true;
+        partyToRemove = party;
+        modalPrompt = $"Do you want to remove party {party.PartyName}?";
+        StateHasChanged();
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+
+        authenticationState = await authStateTask;
+        loggedUserID = authenticationState.User.Claims.FirstOrDefault().Value;
+        loggedUser = await UserRepository.GetUserById(loggedUserID);
+
+        await LoadData();
+
+        await InvokeAsync(() => StateHasChanged());
+    }
+
+    protected async Task LoadData()
+    {
+        userParties = await PartyRepository.GetUserParties(loggedUser);
+        pendingInvites = await PartyRepository.GetUserPendingInvites(loggedUser);
+        displayPendingInvites = await PartyRepository.GetUserPendingDisplayInvites(loggedUser);
+    }
+
+    private async Task AcceptInvitation(UserModel user, int partyId)
+    {
+        PartyUserInviteModel invitation = await PartyRepository.GetInviteByIds(user.Id, partyId);
+        PartyModel party = await PartyRepository.GetPartyById(partyId.ToString());
+        PartyService.AddUserToParty(user, party);
+        PartyService.CancelUserInvitationToParty(user, party);
+        pendingInvites.Remove(invitation);
+        displayPendingInvites.Remove(displayPendingInvites.Find((pendingInvite) => pendingInvite.InvitedUserId == user.Id && pendingInvite.PartyId == partyId));
+        userParties.Add(party);
+    }
+
+    public async Task DeclineInvitation(UserModel user, int partyId)
+    {
+        PartyUserInviteModel invitation = await PartyRepository.GetInviteByIds(user.Id, partyId);
+        PartyModel party = await PartyRepository.GetPartyById(partyId.ToString());
+        PartyService.CancelUserInvitationToParty(user, party);
+        pendingInvites.Remove(invitation);
+        displayPendingInvites.Remove(displayPendingInvites.Find((pendingInvite) => pendingInvite.InvitedUserId == user.Id && pendingInvite.PartyId == partyId));
+    }
+
+    private void GoToParty(int partyID)
+    {
+        NavManager.NavigateTo("/party-room/" + partyID.ToString());
+    }
+
+    public List<CategoryModel> ChosenCategories = new();
+    public List<AreaModel> ChosenAreas = new();
+
+    void CategoryCheckboxClicked(CategoryModel category, object checkedValue)
+    {
+        if ((bool)checkedValue)
+        {
+            ChosenCategories.Add(category);
+        }
+        else
+        {
+            ChosenCategories.Remove(category);
+        }
+    }
+
+    void AreaCheckboxClicked(AreaModel area, object checkedValue)
+    {
+        if ((bool)checkedValue)
+        {
+            ChosenAreas.Add(area);
+        }
+        else
+        {
+            ChosenAreas.Remove(area);
+        }
+    }
+
+    private async Task RemoveRoom(PartyModel party)
+    {
+        PartyService.RemoveParty(party.Id);
+        userParties.Remove(party);
+        await InvokeAsync(StateHasChanged);
+    }
+
+    private void CreateParty()
+    {
+        NavManager.NavigateTo("/Create-party");
+    }
+}
+
